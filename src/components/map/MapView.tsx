@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -137,7 +138,7 @@ export default function MapView({
     return (
       <div className="flex items-center justify-center h-full bg-muted rounded-lg shadow-inner">
         <p className="text-destructive-foreground p-4 bg-destructive rounded-md">
-          Google Maps API Key is missing. Please configure it in your environment variables.
+          WHy this message
         </p>
       </div>
     );
