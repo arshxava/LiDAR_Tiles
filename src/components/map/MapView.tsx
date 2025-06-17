@@ -138,7 +138,7 @@ export default function MapView({
     return (
       <div className="flex items-center justify-center h-full bg-muted rounded-lg shadow-inner">
         <p className="text-destructive-foreground p-4 bg-destructive rounded-md">
-          WHy this message
+          Google Maps API Key is missing. Please configure it in your environment variables.
         </p>
       </div>
     );
