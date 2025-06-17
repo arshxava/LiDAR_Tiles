@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { User, Role } from '@/types';
@@ -17,6 +18,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const MOCK_USERS: User[] = [
   { id: 'admin1', email: 'admin@example.com', role: 'SUPER_ADMIN', name: 'Super Admin' },
   { id: 'user1', email: 'user@example.com', role: 'USER', name: 'End User' },
+  { id: 'user2', email: 'kaurarshdeep1100@gmail.com', role: 'USER', name: 'kaurarshdeep1100' },
 ];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -86,3 +88,4 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     </AuthContext.Provider>
   );
 };
+
