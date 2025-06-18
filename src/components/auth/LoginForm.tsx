@@ -41,7 +41,7 @@ export default function LoginForm() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      login(values.email, values.role as Role); // Cast role to Role type
+      login(values.email, values.role as Role); 
       toast({
         title: "Login Successful",
         description: "Welcome back to LiDAR Explorer!",
@@ -67,7 +67,7 @@ export default function LoginForm() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
-              name="email"
+              name="email"    
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Email</FormLabel>

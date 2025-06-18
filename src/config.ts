@@ -1,4 +1,4 @@
-export const NEXT_PUBLIC_GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+export const NEXT_PUBLIC_GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyCSzwwRNpryjEbnqbA6AnYKjHgCrpB9kME";
 
 if (!NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
   console.warn(
