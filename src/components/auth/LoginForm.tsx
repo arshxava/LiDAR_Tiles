@@ -20,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { MountainSnow } from "lucide-react";
 import { login as loginApi } from '@/service/auth';
 
-// ✅ Login schema without role
+//  Login schema without role
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
@@ -29,7 +29,7 @@ const formSchema = z.object({
 export default function LoginForm() {
   const { login, setUser, setToken } = useAuth();
   const { toast } = useToast();
-  const router = useRouter(); // ✅ move inside component
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,6 +46,7 @@ export default function LoginForm() {
         password: values.password,
       });
 
+
       setUser(res.user);
       setToken(res.token);
 
@@ -60,6 +61,7 @@ export default function LoginForm() {
         router.push('/dashboard');
       }
     } catch (error: any) {
+
       toast({
         variant: 'destructive',
         title: 'Login Failed',
