@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { login as loginApi } from '@/services/auth';
+import { login as loginApi } from '@/service/auth';
 import { register as registerApi } from '@/service/auth';
 import { useRouter } from "next/navigation";
 

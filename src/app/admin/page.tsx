@@ -1,13 +1,17 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import TileStatusGrid from '@/components/admin/TileStatusGrid';
 import AdminStats from '@/components/admin/AdminStats';
+import MapUploadForm from '@/components/admin/MapUploadForm'; // Import the new form
 import type { Tile } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button'; // For potential actions
+import { Loader2, UserPlus, UploadCloud } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
 // Mock data - in a real app, this would come from a database via API/Server Action
 const MOCK_TILES_DATA: Tile[] = [
@@ -26,9 +30,8 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     if (!loading && (!user || user.role !== 'SUPER_ADMIN')) {
-      router.push('/login'); // Or a generic unauthorized page
+      router.push('/login'); 
     } else if (!loading && user) {
-      // Fetch admin-specific data here
       setTiles(MOCK_TILES_DATA);
     }
   }, [user, loading, router]);
@@ -38,17 +41,33 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold font-headline text-foreground">Admin Dashboard</h2>
-        {/* Potential actions like "Add New Tile" could go here */}
-        {/* <Button>Add New Tile</Button> */}
+        <div className="space-x-2">
+            <Button asChild variant="outline">
+                <Link href="/register">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Create New User
+                </Link>
+            </Button>
+            {/* Future: <Button>Add New Tile Source</Button> (Covered by MapUploadForm) */}
+        </div>
       </div>
       
+      <section>
+        <h3 className="text-xl font-semibold font-headline text-foreground mb-4">LiDAR Map Management</h3>
+        <MapUploadForm />
+      </section>
+
+      <Separator />
+
       <section>
         <h3 className="text-xl font-semibold font-headline text-foreground mb-4">Tile Statistics</h3>
         <AdminStats tiles={tiles} />
       </section>
+
+      <Separator />
 
       <section>
         <h3 className="text-xl font-semibold font-headline text-foreground mb-4">Tile Status Overview</h3>
