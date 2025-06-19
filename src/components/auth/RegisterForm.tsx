@@ -25,7 +25,7 @@ import type { Role } from "@/types";
 import { MountainSnow } from "lucide-react";
 
 const formSchema = z.object({
-  
+  username: z.string().min(3, { message: "Username must be at least 3 characters." }),
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
   confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters." }),
@@ -42,6 +42,7 @@ const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      username: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -53,6 +54,7 @@ const router = useRouter();
   try {
 
     const res = await registerApi({
+      username:values.username,
       email: values.email,
       password: values.password,
       role: values.role,
@@ -86,6 +88,19 @@ const router = useRouter();
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input placeholder="abc123" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="email"
@@ -125,7 +140,7 @@ const router = useRouter();
                 </FormItem>
               )}
             />
-            <FormField
+            {/* <FormField
               control={form.control}
               name="role"
               render={({ field }) => (
@@ -154,7 +169,7 @@ const router = useRouter();
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
             <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6">
               Register
             </Button>
