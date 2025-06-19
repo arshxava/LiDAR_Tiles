@@ -5,6 +5,9 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { login as loginApi } from '@/services/auth';
+import { register as registerApi } from '@/service/auth';
+
 import {
   Form,
   FormControl,
@@ -21,6 +24,7 @@ import type { Role } from "@/types";
 import { MountainSnow } from "lucide-react";
 
 const formSchema = z.object({
+  
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
   confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters." }),
@@ -44,21 +48,34 @@ export default function RegisterForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      register(values.email, values.role as Role); // Cast role to Role type
-      toast({
-        title: "Registration Successful",
-        description: "Welcome to LiDAR Explorer!",
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Registration Failed",
-        description: error.message || "An unexpected error occurred.",
-      });
-    }
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    console.log("Register values:", values);
+const res = await registerApi({ ...values });
+console.log("Register response:", res);
+
+  try {
+    await registerApi({
+      email: values.email,
+      password: values.password,
+      role: values.role,
+    });
+
+    toast({
+      title: 'Registration Successful',
+      description: 'Welcome to LiDAR Explorer!',
+    });
+
+    router.push('/login');
+  } catch (error: any) {
+  console.error("Registration error:", error);
+    toast({
+      variant: 'destructive',
+      title: 'Registration Failed',
+      description: error.response?.data?.message || 'An unexpected error occurred.',
+    });
   }
+};
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-background to-secondary/30 p-4">

@@ -14,11 +14,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import type { Role } from "@/types";
 import { MountainSnow } from "lucide-react";
+import { login as loginApi } from '@/service/auth';
+
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -27,7 +27,7 @@ const formSchema = z.object({
 });
 
 export default function LoginForm() {
-  const { login } = useAuth();
+const { login, setUser, setToken } = useAuth();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -39,21 +39,37 @@ export default function LoginForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      login(values.email, values.role as Role); 
-      toast({
-        title: "Login Successful",
-        description: "Welcome back to LiDAR Explorer!",
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: error.message || "An unexpected error occurred.",
-      });
+ const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  try {
+    const res = await loginApi({
+      email: values.email,
+      password: values.password,
+    });
+
+    setUser(res.user);
+    setToken(res.token);
+
+    toast({
+      title: 'Login Successful',
+      description: 'Welcome back to LiDAR Explorer!',
+    });
+
+    if (res.user.role === "SUPER_ADMIN") {
+      router.push('/admin');
+    } else {
+      router.push('/dashboard');
     }
+
+  } catch (error: any) {
+    toast({
+      variant: 'destructive',
+      title: 'Login Failed',
+      description: error.response?.data?.msg || 'An unexpected error occurred.',
+    });
   }
+};
+
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-background to-secondary/30 p-4">
@@ -86,36 +102,6 @@ export default function LoginForm() {
                   <FormLabel>Password</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••••" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Login as</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4"
-                    >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="USER" />
-                        </FormControl>
-                        <FormLabel className="font-normal">End User</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="SUPER_ADMIN" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Super Admin</FormLabel>
-                      </FormItem>
-                    </RadioGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
