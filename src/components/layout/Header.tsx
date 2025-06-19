@@ -54,14 +54,14 @@ export default function Header() {
         <nav className="flex items-center space-x-4">
           {user && (
             <>
-              {user.role === 'SUPER_ADMIN' && (
+              {/* {user.role === 'SUPER_ADMIN' && (
                 <Link href="/admin" className={`hover:text-accent-foreground/80 transition-colors ${pathname === '/admin' ? 'font-bold underline' : ''}`}>
                   Admin Dashboard
                 </Link>
-              )}
-              <Link href="/dashboard" className={`hover:text-accent-foreground/80 transition-colors ${pathname === '/dashboard' ? 'font-bold underline' : ''}`}>
+              )} */}
+              {/* <Link href="/dashboard" className={`hover:text-accent-foreground/80 transition-colors ${pathname === '/dashboard' ? 'font-bold underline' : ''}`}>
                 User Dashboard
-              </Link>
+              </Link> */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
