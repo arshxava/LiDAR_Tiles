@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { login as loginApi } from '@/services/auth';
 import { register as registerApi } from '@/service/auth';
+import { useRouter } from "next/navigation";
 
 import {
   Form,
@@ -35,8 +36,8 @@ const formSchema = z.object({
 });
 
 export default function RegisterForm() {
-  const { register } = useAuth();
   const { toast } = useToast();
+const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -48,26 +49,23 @@ export default function RegisterForm() {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log("Register values:", values);
-const res = await registerApi({ ...values });
-console.log("Register response:", res);
-
+ const onSubmit = async (values: z.infer<typeof formSchema>) => {
   try {
-    await registerApi({
+
+    const res = await registerApi({
       email: values.email,
       password: values.password,
       role: values.role,
     });
+
 
     toast({
       title: 'Registration Successful',
       description: 'Welcome to LiDAR Explorer!',
     });
 
-    router.push('/login');
+     router.push('/login');
   } catch (error: any) {
-  console.error("Registration error:", error);
     toast({
       variant: 'destructive',
       title: 'Registration Failed',
@@ -75,6 +73,7 @@ console.log("Register response:", res);
     });
   }
 };
+
 
 
   return (

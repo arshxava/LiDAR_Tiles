@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -19,57 +20,53 @@ import { useToast } from "@/hooks/use-toast";
 import { MountainSnow } from "lucide-react";
 import { login as loginApi } from '@/service/auth';
 
-
+// ✅ Login schema without role
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
-  role: z.enum(["USER", "SUPER_ADMIN"], { required_error: "You need to select a role." }),
 });
 
 export default function LoginForm() {
-const { login, setUser, setToken } = useAuth();
+  const { login, setUser, setToken } = useAuth();
   const { toast } = useToast();
+  const router = useRouter(); // ✅ move inside component
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
       password: "",
-      role: "USER",
     },
   });
 
- const onSubmit = async (values: z.infer<typeof formSchema>) => {
-  try {
-    const res = await loginApi({
-      email: values.email,
-      password: values.password,
-    });
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      const res = await loginApi({
+        email: values.email,
+        password: values.password,
+      });
 
-    setUser(res.user);
-    setToken(res.token);
+      setUser(res.user);
+      setToken(res.token);
 
-    toast({
-      title: 'Login Successful',
-      description: 'Welcome back to LiDAR Explorer!',
-    });
+      toast({
+        title: 'Login Successful',
+        description: 'Welcome back to LiDAR Explorer!',
+      });
 
-    if (res.user.role === "SUPER_ADMIN") {
-      router.push('/admin');
-    } else {
-      router.push('/dashboard');
+      if (res.user.role === "SUPER_ADMIN") {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: error.response?.data?.msg || 'An unexpected error occurred.',
+      });
     }
-
-  } catch (error: any) {
-    toast({
-      variant: 'destructive',
-      title: 'Login Failed',
-      description: error.response?.data?.msg || 'An unexpected error occurred.',
-    });
-  }
-};
-
-
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-background to-secondary/30 p-4">
@@ -83,7 +80,7 @@ const { login, setUser, setToken } = useAuth();
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
-              name="email"    
+              name="email"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Email</FormLabel>
@@ -115,9 +112,7 @@ const { login, setUser, setToken } = useAuth();
         <p className="mt-8 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Button variant="link" asChild className="text-accent p-0 h-auto font-semibold hover:text-accent/80">
-            <Link href="/register">
-              Register here
-            </Link>
+            <Link href="/register">Register here</Link>
           </Button>
         </p>
       </div>
