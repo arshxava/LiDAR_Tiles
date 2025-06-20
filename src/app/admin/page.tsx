@@ -29,7 +29,7 @@ export default function AdminDashboardPage() {
   const fetchTiles = async () => {
     try {
       setTileLoading(true);
-      const response = await axios.get('/api/tiles'); // Adjust this URL if needed
+      const response = await axios.get('/api/tiles'); 
       setTiles(response.data.tiles); // Ensure this matches your API's response shape
     } catch (error) {
       console.error("Error fetching tiles:", error);
