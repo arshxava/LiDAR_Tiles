@@ -1,9 +1,9 @@
 "use client";
-
+ 
 import type { User, Role } from "@/types";
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
-
+ 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -13,11 +13,11 @@ interface AuthContextType {
   setUser: (user: User) => void;
   setToken: (token: string) => void;
 }
-
+ 
 export const AuthContext = createContext<AuthContextType | undefined>(
   undefined
 );
-
+ 
 const MOCK_USERS: User[] = [
   {
     id: "admin1",
@@ -33,28 +33,44 @@ const MOCK_USERS: User[] = [
     name: "kaurarshdeep1100",
   },
 ];
-
+ 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
-
+ 
   useEffect(() => {
     const storedUser = localStorage.getItem("lidarUser");
+    const storedToken = localStorage.getItem("lidarToken");
+ 
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+ 
+    if (storedToken) {
+      setToken(storedToken);
+    }
+ 
     setLoading(false);
   }, []);
-
+  const setUserWithStorage = (user: User) => {
+    localStorage.setItem("lidarUser", JSON.stringify(user));
+    setUser(user);
+  };
+ 
+  const setTokenWithStorage = (token: string) => {
+    localStorage.setItem("lidarToken", token);
+    setToken(token);
+  };
+ 
   useEffect(() => {
     if (loading) return;
-
+ 
     const publicPaths = ["/login", "/register"];
     const isPublicPath = publicPaths.includes(pathname);
-
+ 
     if (!user && !isPublicPath) {
       router.push("/login");
     } else if (user && isPublicPath) {
@@ -63,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       router.push(user.role === "SUPER_ADMIN" ? "/admin" : "/dashboard");
     }
   }, [user, loading, pathname, router]);
-
+ 
   const login = (email: string, role: Role) => {
     // In a real app, you'd validate credentials against a backend
     const foundUser = MOCK_USERS.find(
@@ -84,7 +100,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw new Error("Invalid credentials or role.");
     }
   };
-
+ 
   const register = (email: string, role: Role) => {
     // In a real app, you'd save the new user to a backend
     const newUser: User = {
@@ -98,18 +114,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(newUser);
     router.push(newUser.role === "SUPER_ADMIN" ? "/admin" : "/dashboard");
   };
-
+ 
   const logout = () => {
     localStorage.removeItem("lidarUser");
     setUser(null);
     router.push("/login");
   };
-
+ 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, logout, register, setUser, setToken }}
+      value={{
+        user,
+        loading,
+        login,
+        logout,
+        register,
+        setUser: setUserWithStorage,
+        setToken: setTokenWithStorage,
+      }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
+ 
+ 
