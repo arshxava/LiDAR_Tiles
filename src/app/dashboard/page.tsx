@@ -36,10 +36,13 @@ export default function DashboardPage() {
 
   const [selectedTile, setSelectedTile] = useState<Tile | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  const [currentTool, setCurrentTool] = useState<"point" | "polygon" | null>(null);
+  const [currentTool, setCurrentTool] = useState<"point" | "polygon" | null>(
+    null
+  );
   const [isAnnotationDialogOpen, setIsAnnotationDialogOpen] = useState(false);
   const [currentAnnotationData, setCurrentAnnotationData] = useState<any>(null);
-  const [currentAnnotationType, setCurrentAnnotationType] = useState<AnnotationType | null>(null);
+  const [currentAnnotationType, setCurrentAnnotationType] =
+    useState<AnnotationType | null>(null);
   const [annotationLabel, setAnnotationLabel] = useState("");
   const [annotationNotes, setAnnotationNotes] = useState("");
   const [skipCount, setSkipCount] = useState(0);
@@ -48,7 +51,9 @@ export default function DashboardPage() {
   const [pastAnnotations, setPastAnnotations] = useState<Annotation[]>([]);
   const [level, setLevel] = useState(1);
   const [badges, setBadges] = useState<string[]>([]);
-  const [leaderboard, setLeaderboard] = useState<{ name: string; count: number }[]>([]);
+  const [leaderboard, setLeaderboard] = useState<
+    { name: string; count: number }[]
+  >([]);
   const [newTileAssigned, setNewTileAssigned] = useState(false);
   const [loadingTile, setLoadingTile] = useState(true);
 
@@ -69,7 +74,11 @@ export default function DashboardPage() {
       setLoadingTile(true);
       const token = localStorage.getItem("token");
       const tile = await getAssignedTile(token);
-          console.log("🧩 Selected tile:", tile); 
+      if (tile?.imageUrl && tile.imageUrl.startsWith("/uploads")) {
+        tile.imageUrl = `http://localhost:5000${tile.imageUrl}`;
+      }
+      setSelectedTile(tile);
+      console.log("🧩 Selected tile:", tile);
       setSelectedTile(tile);
       setNewTileAssigned(true);
     } catch (err) {
@@ -98,26 +107,38 @@ export default function DashboardPage() {
     }
   };
 
-  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
-    if (currentTool === "point" && selectedTile && e.latLng) {
-      setCurrentAnnotationData({
-        coordinates: { lat: e.latLng.lat(), lng: e.latLng.lng() },
-      });
-      setCurrentAnnotationType("point");
-      setIsAnnotationDialogOpen(true);
-    }
-  }, [currentTool, selectedTile]);
+  const handleMapClick = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      if (currentTool === "point" && selectedTile && e.latLng) {
+        setCurrentAnnotationData({
+          coordinates: { lat: e.latLng.lat(), lng: e.latLng.lng() },
+        });
+        setCurrentAnnotationType("point");
+        setIsAnnotationDialogOpen(true);
+      }
+    },
+    [currentTool, selectedTile]
+  );
 
-  const handleAnnotationComplete = useCallback((data: any) => {
-    if (currentTool === "polygon") {
-      setCurrentAnnotationData(data);
-      setCurrentAnnotationType("polygon");
-      setIsAnnotationDialogOpen(true);
-    }
-  }, [currentTool]);
+  const handleAnnotationComplete = useCallback(
+    (data: any) => {
+      if (currentTool === "polygon") {
+        setCurrentAnnotationData(data);
+        setCurrentAnnotationType("polygon");
+        setIsAnnotationDialogOpen(true);
+      }
+    },
+    [currentTool]
+  );
 
   const saveAnnotation = () => {
-    if (!selectedTile || !user || !currentAnnotationType || !currentAnnotationData) return;
+    if (
+      !selectedTile ||
+      !user ||
+      !currentAnnotationType ||
+      !currentAnnotationData
+    )
+      return;
 
     const newAnn: Annotation = {
       id: Date.now().toString(),
@@ -224,7 +245,8 @@ export default function DashboardPage() {
               <ScrollArea className="h-48">
                 {pastAnnotations.map((a) => (
                   <div key={a.id} className="p-2 border-b">
-                    <strong>{a.label || a.type}</strong> at {new Date(a.createdAt).toLocaleString()}
+                    <strong>{a.label || a.type}</strong> at{" "}
+                    {new Date(a.createdAt).toLocaleString()}
                   </div>
                 ))}
               </ScrollArea>
@@ -259,7 +281,9 @@ export default function DashboardPage() {
           <Card className="shadow">
             <CardHeader>
               <CardTitle>Available Tile</CardTitle>
-              <CardDescription>{selectedTile?.name || "Untitled"}</CardDescription>
+              <CardDescription>
+                {selectedTile?.name || "Untitled"}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <p>Status: {selectedTile?.status}</p>
@@ -268,7 +292,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <Dialog open={isAnnotationDialogOpen} onOpenChange={setIsAnnotationDialogOpen}>
+      <Dialog
+        open={isAnnotationDialogOpen}
+        onOpenChange={setIsAnnotationDialogOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Annotation</DialogTitle>
@@ -290,7 +317,10 @@ export default function DashboardPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAnnotationDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsAnnotationDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button onClick={saveAnnotation}>Save</Button>
