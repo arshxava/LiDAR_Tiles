@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import AnnotationToolbar from "@/components/map/AnnotationToolbar";
 import type { Tile, Annotation, AnnotationType } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,6 +56,8 @@ export default function DashboardPage() {
   >([]);
   const [newTileAssigned, setNewTileAssigned] = useState(false);
   const [loadingTile, setLoadingTile] = useState(true);
+const [drawingPolygon, setDrawingPolygon] = useState(false);
+const [polygonPoints, setPolygonPoints] = useState<{ x: number; y: number }[]>([]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -157,6 +159,28 @@ export default function DashboardPage() {
     setCurrentTool(null);
     toast({ title: "Annotation Added" });
   };
+  const imageRef = useRef<HTMLImageElement | null>(null);
+
+const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
+  if (!imageRef.current) return;
+
+  const rect = imageRef.current.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  if (currentTool === "point") {
+    setCurrentAnnotationData({ pixelX: x, pixelY: y });
+    setCurrentAnnotationType("point");
+    setIsAnnotationDialogOpen(true);
+  }
+
+  if (currentTool === "polygon") {
+    setPolygonPoints((prev) => [...prev, { x, y }]);
+    setDrawingPolygon(true);
+  }
+};
+
+
 
   const completeTile = async () => {
     if (!selectedTile) return;
@@ -205,13 +229,32 @@ export default function DashboardPage() {
           />
 
           {selectedTile?.imageUrl ? (
-            <div className="border bg-white rounded-xl overflow-hidden shadow h-[500px]">
-              <img
-                src={selectedTile.imageUrl}
-                alt={`Tile - ${selectedTile.name}`}
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <div className="relative w-full h-[500px] overflow-hidden border bg-white rounded-xl shadow">
+  <img
+    src={selectedTile.imageUrl}
+    alt={`Tile - ${selectedTile.name}`}
+    className="w-full h-full object-cover"
+    ref={imageRef}
+    onClick={handleImageClick}
+  />
+
+{[...annotations, ...pastAnnotations].map((ann) =>
+
+    ann.type === "point" ? (
+      <div
+        key={ann.id}
+        className="absolute w-4 h-4 bg-red-600 rounded-full border border-white"
+        style={{
+          left: `${ann.data.pixelX}px`,
+          top: `${ann.data.pixelY}px`,
+          transform: 'translate(-50%, -50%)',
+        }}
+        title={ann.label}
+      />
+    ) : null
+  )}
+</div>
+
           ) : (
             <div className="h-[500px] flex items-center justify-center bg-gray-100 text-gray-600 border rounded shadow">
               No tile image available.

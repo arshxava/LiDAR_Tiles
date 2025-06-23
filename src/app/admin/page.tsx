@@ -22,7 +22,10 @@ export default function AdminDashboardPage() {
   const [mapName, setMapName] = useState<string>("");
   const [latestMap, setLatestMap] = useState<any>(null);
   const [showMapModal, setShowMapModal] = useState(false);
-
+const [statusFilter, setStatusFilter] = useState<string>("all");
+const filteredTiles = statusFilter === "all"
+  ? tiles
+  : tiles.filter((tile) => tile.status === statusFilter);
   useEffect(() => {
     if (!loading && (!user || user.role !== "SUPER_ADMIN")) {
       router.push("/login");
@@ -131,15 +134,30 @@ export default function AdminDashboardPage() {
       <Separator />
 
       <section>
-        <h3 className="text-xl font-semibold font-headline text-foreground mb-4">
-          Tile Status Overview
-        </h3>
+       <div className="flex items-center justify-between mb-4">
+  <h3 className="text-xl font-semibold font-headline text-foreground">
+    Tile Status Overview
+  </h3>
+  <select
+    value={statusFilter}
+    onChange={(e) => setStatusFilter(e.target.value)}
+    className="border border-input rounded px-3 py-1 text-sm"
+  >
+    <option value="all">All</option>
+    <option value="available">Available</option>
+    <option value="in_progress">In Progress</option>
+    <option value="completed">Completed</option>
+  </select>
+</div>
+
+        
         {tileLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-muted" />
           </div>
         ) : (
-          <TileStatusGrid tiles={tiles} />
+          <TileStatusGrid tiles={filteredTiles} />
+
         )}
       </section>
     </div>
