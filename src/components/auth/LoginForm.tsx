@@ -1,5 +1,5 @@
 "use client";
-
+ 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -19,18 +19,18 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { MountainSnow } from "lucide-react";
 import { login as loginApi } from '@/service/auth';
-
+ 
 //  Login schema without role
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
-
+ 
 export default function LoginForm() {
   const { login, setUser, setToken } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
-
+ 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,30 +38,30 @@ export default function LoginForm() {
       password: "",
     },
   });
-
+ 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       const res = await loginApi({
         email: values.email,
         password: values.password,
       });
-
-
+ 
+ 
       setUser(res.user);
       setToken(res.token);
-
+ 
       toast({
         title: 'Login Successful',
         description: 'Welcome back to LiDAR Explorer!',
       });
-
+ 
       if (res.user.role === "SUPER_ADMIN") {
         router.push('/admin');
       } else {
         router.push('/dashboard');
       }
     } catch (error: any) {
-
+ 
       toast({
         variant: 'destructive',
         title: 'Login Failed',
@@ -69,7 +69,7 @@ export default function LoginForm() {
       });
     }
   };
-
+ 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-background to-secondary/30 p-4">
       <div className="w-full max-w-md bg-card p-8 rounded-xl shadow-2xl">

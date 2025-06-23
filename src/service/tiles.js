@@ -1,16 +1,35 @@
-// services/tile.js
 import api from './api';
 
-export const getAssignedTile = async (token) => {
-  const res = await api.get('/tiles/assigned', {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export const getAssignedTile = async () => {
+  const token = localStorage.getItem("lidarToken"); // ✅ Get token from storage
+
+  if (!token) throw new Error("No token found");
+
+  const res = await api.post(
+    '/tiles/assign',
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
   return res.data;
 };
 
-export const submitTile = async (tileData, token) => {
-  const res = await api.post('/tiles/submit', tileData, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export const submitTile = async ({ tileId, annotations }) => {
+  const token = localStorage.getItem("lidarToken");
+
+  if (!token) throw new Error("No token found");
+
+  const res = await api.post(
+    `/tiles/complete/${tileId}`,
+    { annotations },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
   return res.data;
 };

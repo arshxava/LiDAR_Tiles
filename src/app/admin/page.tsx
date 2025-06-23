@@ -1,3 +1,4 @@
+// AdminDashboardPage.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -33,10 +34,10 @@ export default function AdminDashboardPage() {
   const fetchTiles = async () => {
     try {
       setTileLoading(true);
-
       const mapsRes = await axios.get("http://localhost:5000/api/maps");
       const maps = mapsRes.data;
       const latest = maps[maps.length - 1];
+
       if (!latest?._id) {
         console.error("No map found.");
         return;
@@ -56,7 +57,6 @@ export default function AdminDashboardPage() {
     }
   };
 
-  console.log("Latest Map:", latestMap);
   if (loading || !user || user.role !== "SUPER_ADMIN") {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -77,7 +77,7 @@ export default function AdminDashboardPage() {
         <h3 className="text-xl font-semibold font-headline text-foreground mb-4">
           LiDAR Map Management
         </h3>
-        <MapUploadForm />
+        <MapUploadForm onUploadSuccess={fetchTiles} />
       </section>
 
       <Separator />

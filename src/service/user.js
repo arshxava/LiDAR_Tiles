@@ -24,3 +24,18 @@ export const updateUserRole = async (userId, role, token) => {
   );
   return res.data;
 };
+
+
+export const getUserAnnotations = async (userId, token) => {
+  const res = await api.get(`/users/${userId}/annotations`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+};
+
+export const getLeaderboard = async (token) => {
+  const res = await api.get(`/users/leaderboard`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+};

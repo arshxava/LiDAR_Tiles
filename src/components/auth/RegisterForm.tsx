@@ -1,5 +1,5 @@
 "use client";
-
+ 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { login as loginApi } from '@/service/auth';
 import { register as registerApi } from '@/service/auth';
 import { useRouter } from "next/navigation";
-
+ 
 import {
   Form,
   FormControl,
@@ -23,7 +23,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import type { Role } from "@/types";
 import { MountainSnow } from "lucide-react";
-
+ 
 const formSchema = z.object({
   username: z.string().min(3, { message: "Username must be at least 3 characters." }),
   email: z.string().email({ message: "Invalid email address." }),
@@ -32,13 +32,13 @@ const formSchema = z.object({
   role: z.enum(["USER", "SUPER_ADMIN"], { required_error: "You need to select a role." }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
-  path: ["confirmPassword"], 
+  path: ["confirmPassword"],
 });
-
+ 
 export default function RegisterForm() {
   const { toast } = useToast();
 const router = useRouter();
-
+ 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -49,23 +49,23 @@ const router = useRouter();
       role: "USER",
     },
   });
-
+ 
  const onSubmit = async (values: z.infer<typeof formSchema>) => {
   try {
-
+ 
     const res = await registerApi({
       username:values.username,
       email: values.email,
       password: values.password,
       role: values.role,
     });
-
-
+ 
+ 
     toast({
       title: 'Registration Successful',
       description: 'Welcome to LiDAR Explorer!',
     });
-
+ 
      router.push('/login');
   } catch (error: any) {
     toast({
@@ -75,9 +75,9 @@ const router = useRouter();
     });
   }
 };
-
-
-
+ 
+ 
+ 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-background to-secondary/30 p-4">
       <div className="w-full max-w-md bg-card p-8 rounded-xl shadow-2xl">
@@ -187,3 +187,5 @@ const router = useRouter();
     </div>
   );
 }
+ 
+ 
