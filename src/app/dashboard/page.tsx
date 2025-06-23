@@ -66,13 +66,12 @@ export default function DashboardPage() {
     if (savedTile) {
       const parsedTile = JSON.parse(savedTile);
 
-      // ✅ Properly format image URL
       if (parsedTile.imageUrl && parsedTile.imageUrl.startsWith("/uploads")) {
         parsedTile.imageUrl = `http://localhost:5000${parsedTile.imageUrl}`;
       }
 
       setSelectedTile(parsedTile);
-      setLoadingTile(false); // ✅ ADD THIS BACK HERE
+      setLoadingTile(false); 
     } else {
       fetchAssignedTile();
     }
@@ -182,29 +181,7 @@ export default function DashboardPage() {
     }
   };
 
-  const completeTile = async () => {
-    if (!selectedTile || !selectedTile.id) {
-      toast({ variant: "destructive", title: "Invalid tile. Please reload." });
-      console.error("Invalid selectedTile", selectedTile);
-      return;
-    }
 
-    try {
-      await submitTile({
-        tileId: selectedTile.id,
-        annotations,
-      });
-      toast({ title: "Tile Completed!" });
-      setAnnotations([]);
-      localStorage.removeItem("currentTile");
-      localStorage.removeItem("currentAnnotations");
-      await fetchAssignedTile();
-      fetchUserStats();
-    } catch (err) {
-      console.error("Tile submit error", err);
-      toast({ variant: "destructive", title: "Error submitting tile" });
-    }
-  };
 
   const skipTile = async () => {
     if (skipCount >= MAX_SKIP) {
@@ -229,6 +206,37 @@ export default function DashboardPage() {
       </div>
     );
   }
+  const completeTile = async () => {
+  if (!selectedTile || annotations.length === 0) {
+    toast({
+      variant: "destructive",
+      title: "No annotations to submit",
+    });
+    return;
+  }
+
+  try {
+    await submitTile({
+      tileId: selectedTile.id,
+      annotations,
+    });
+
+    toast({ title: "Tile submitted successfully ✅" });
+
+    // Clear local data and fetch a new tile
+    setAnnotations([]);
+    localStorage.removeItem("currentTile");
+    localStorage.removeItem("currentAnnotations");
+    await fetchAssignedTile();
+  } catch (err) {
+    console.error("Tile submission failed:", err);
+    toast({
+      variant: "destructive",
+      title: "Failed to submit tile",
+    });
+  }
+};
+
 
   return (
     <div className="container mx-auto p-6 space-y-6">
