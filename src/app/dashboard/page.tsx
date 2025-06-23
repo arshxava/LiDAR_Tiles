@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import AnnotationToolbar from "@/components/map/AnnotationToolbar";
 import type { Tile, Annotation, AnnotationType } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Save, Loader2, SkipForward } from "lucide-react";
 import { getAssignedTile, submitTile } from "../../service/tiles";
 import { getUserAnnotations, getLeaderboard } from "../../service/user";
+import { saveAnnotationToDB } from "../../service/annotations";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
@@ -36,13 +37,10 @@ export default function DashboardPage() {
 
   const [selectedTile, setSelectedTile] = useState<Tile | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  const [currentTool, setCurrentTool] = useState<"point" | "polygon" | null>(
-    null
-  );
+  const [currentTool, setCurrentTool] = useState<"point" | "polygon" | null>(null);
   const [isAnnotationDialogOpen, setIsAnnotationDialogOpen] = useState(false);
   const [currentAnnotationData, setCurrentAnnotationData] = useState<any>(null);
-  const [currentAnnotationType, setCurrentAnnotationType] =
-    useState<AnnotationType | null>(null);
+  const [currentAnnotationType, setCurrentAnnotationType] = useState<AnnotationType | null>(null);
   const [annotationLabel, setAnnotationLabel] = useState("");
   const [annotationNotes, setAnnotationNotes] = useState("");
   const [skipCount, setSkipCount] = useState(0);
@@ -51,45 +49,66 @@ export default function DashboardPage() {
   const [pastAnnotations, setPastAnnotations] = useState<Annotation[]>([]);
   const [level, setLevel] = useState(1);
   const [badges, setBadges] = useState<string[]>([]);
-  const [leaderboard, setLeaderboard] = useState<
-    { name: string; count: number }[]
-  >([]);
+  const [leaderboard, setLeaderboard] = useState<{ name: string; count: number }[]>([]);
   const [newTileAssigned, setNewTileAssigned] = useState(false);
   const [loadingTile, setLoadingTile] = useState(true);
-const [drawingPolygon, setDrawingPolygon] = useState(false);
-const [polygonPoints, setPolygonPoints] = useState<{ x: number; y: number }[]>([]);
+  const [drawingPolygon, setDrawingPolygon] = useState(false);
+  const [polygonPoints, setPolygonPoints] = useState<{ x: number; y: number }[]>([]);
+
+  const imageRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
       router.push("/login");
-      return;
-    }
-    if (!loading && user) {
-      fetchAssignedTile();
+    } else if (user) {
+      const savedTile = localStorage.getItem("currentTile");
+      const savedAnnotations = localStorage.getItem("currentAnnotations");
+      if (savedTile) {
+        const parsedTile = JSON.parse(savedTile);
+        parsedTile.imageUrl = `http://localhost:5000${parsedTile.imageUrl}`;
+        setSelectedTile(parsedTile);
+        setLoadingTile(false);
+      } else {
+        fetchAssignedTile();
+      }
+      if (savedAnnotations) {
+        setAnnotations(JSON.parse(savedAnnotations));
+      }
       fetchUserStats();
     }
   }, [user, loading]);
 
-  const fetchAssignedTile = async () => {
-    if (!user?.id) return;
-    try {
-      setLoadingTile(true);
-      const token = localStorage.getItem("token");
-      const tile = await getAssignedTile(token);
-      if (tile?.imageUrl && tile.imageUrl.startsWith("/uploads")) {
-        tile.imageUrl = `http://localhost:5000${tile.imageUrl}`;
-      }
-      setSelectedTile(tile);
-      console.log("🧩 Selected tile:", tile);
-      setSelectedTile(tile);
-      setNewTileAssigned(true);
-    } catch (err) {
-      console.error("Tile assignment error:", err);
-      toast({ variant: "destructive", title: "No available tiles" });
-    } finally {
-      setLoadingTile(false);
+  useEffect(() => {
+    if (selectedTile) {
+      localStorage.setItem("currentTile", JSON.stringify(selectedTile));
     }
-  };
+    localStorage.setItem("currentAnnotations", JSON.stringify(annotations));
+  }, [selectedTile, annotations]);
+
+  const fetchAssignedTile = async () => {
+  if (!user?.id) return;
+  try {
+    setLoadingTile(true);
+    const token = localStorage.getItem("lidarToken"); 
+    const tile = await getAssignedTile(token);
+
+    if (tile?._id) {
+      tile.id = tile._id; // ✅ fix for undefined id
+    }
+
+    if (tile?.imageUrl && tile.imageUrl.startsWith("/uploads")) {
+      tile.imageUrl = `http://localhost:5000${tile.imageUrl}`;
+    }
+
+    setSelectedTile(tile);
+    setNewTileAssigned(true);
+  } catch (err) {
+    toast({ variant: "destructive", title: "No available tiles" });
+  } finally {
+    setLoadingTile(false);
+  }
+};
+
 
   const fetchUserStats = async () => {
     if (!user?.id) return;
@@ -109,41 +128,29 @@ const [polygonPoints, setPolygonPoints] = useState<{ x: number; y: number }[]>([
     }
   };
 
-  const handleMapClick = useCallback(
-    (e: google.maps.MapMouseEvent) => {
-      if (currentTool === "point" && selectedTile && e.latLng) {
-        setCurrentAnnotationData({
-          coordinates: { lat: e.latLng.lat(), lng: e.latLng.lng() },
-        });
-        setCurrentAnnotationType("point");
-        setIsAnnotationDialogOpen(true);
-      }
-    },
-    [currentTool, selectedTile]
-  );
+  const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!imageRef.current) return;
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-  const handleAnnotationComplete = useCallback(
-    (data: any) => {
-      if (currentTool === "polygon") {
-        setCurrentAnnotationData(data);
-        setCurrentAnnotationType("polygon");
-        setIsAnnotationDialogOpen(true);
-      }
-    },
-    [currentTool]
-  );
+    if (currentTool === "point") {
+      setCurrentAnnotationData({ pixelX: x, pixelY: y });
+      setCurrentAnnotationType("point");
+      setIsAnnotationDialogOpen(true);
+    }
 
-  const saveAnnotation = () => {
-    if (
-      !selectedTile ||
-      !user ||
-      !currentAnnotationType ||
-      !currentAnnotationData
-    )
-      return;
+    if (currentTool === "polygon") {
+      setPolygonPoints((prev) => [...prev, { x, y }]);
+      setDrawingPolygon(true);
+    }
+  };
+
+  const saveAnnotation = async () => {
+    if (!selectedTile || !user || !currentAnnotationType || !currentAnnotationData) return;
 
     const newAnn: Annotation = {
-      id: Date.now().toString(),
+      // id: Date.now().toString(),
       tileId: selectedTile.id,
       userId: user.id,
       type: currentAnnotationType,
@@ -152,55 +159,56 @@ const [polygonPoints, setPolygonPoints] = useState<{ x: number; y: number }[]>([
       notes: annotationNotes,
       createdAt: new Date().toISOString(),
     };
-    setAnnotations((prev) => [...prev, newAnn]);
-    setAnnotationLabel("");
-    setAnnotationNotes("");
-    setIsAnnotationDialogOpen(false);
-    setCurrentTool(null);
-    toast({ title: "Annotation Added" });
+
+    try {
+      await saveAnnotationToDB(newAnn);
+      setAnnotations((prev) => [...prev, newAnn]);
+      setAnnotationLabel("");
+      setAnnotationNotes("");
+      setIsAnnotationDialogOpen(false);
+      setCurrentTool(null);
+      setPolygonPoints([]);
+      setDrawingPolygon(false);
+      toast({ title: "Annotation saved ✅" });
+    } catch (err) {
+      console.error("Annotation save failed:", err);
+      toast({ variant: "destructive", title: "Failed to save annotation" });
+    }
   };
-  const imageRef = useRef<HTMLImageElement | null>(null);
 
-const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
-  if (!imageRef.current) return;
-
-  const rect = imageRef.current.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-
-  if (currentTool === "point") {
-    setCurrentAnnotationData({ pixelX: x, pixelY: y });
-    setCurrentAnnotationType("point");
-    setIsAnnotationDialogOpen(true);
+ const completeTile = async () => {
+  if (!selectedTile || !selectedTile.id) {
+    toast({ variant: "destructive", title: "Invalid tile. Please reload." });
+    console.error("Invalid selectedTile", selectedTile);
+    return;
   }
 
-  if (currentTool === "polygon") {
-    setPolygonPoints((prev) => [...prev, { x, y }]);
-    setDrawingPolygon(true);
+  try {
+    await submitTile({
+      tileId: selectedTile.id,
+      annotations,
+    });
+    toast({ title: "Tile Completed!" });
+    setAnnotations([]);
+    localStorage.removeItem("currentTile");
+    localStorage.removeItem("currentAnnotations");
+    await fetchAssignedTile();
+    fetchUserStats();
+  } catch (err) {
+    console.error("Tile submit error", err);
+    toast({ variant: "destructive", title: "Error submitting tile" });
   }
 };
 
-
-
-  const completeTile = async () => {
-    if (!selectedTile) return;
-    try {
-      const token = localStorage.getItem("token");
-      await submitTile({ tileId: selectedTile.id, annotations }, token);
-      toast({ title: "Tile Completed!" });
-      await fetchAssignedTile();
-      setAnnotations([]);
-      fetchUserStats();
-    } catch (err) {
-      toast({ variant: "destructive", title: "Error submitting tile" });
-    }
-  };
 
   const skipTile = async () => {
     if (skipCount >= MAX_SKIP) {
       toast({ variant: "destructive", title: "Skip limit reached" });
       return;
     }
+    setAnnotations([]);
+    localStorage.removeItem("currentTile");
+    localStorage.removeItem("currentAnnotations");
     await fetchAssignedTile();
     setSkipCount((prev) => prev + 1);
   };
@@ -215,7 +223,7 @@ const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {newTileAssigned && selectedTile && (
+     {newTileAssigned && selectedTile && (
         <div className="bg-yellow-100 p-3 rounded border">
           New tile assigned: <strong>{selectedTile.name || "Untitled"}</strong>
         </div>
@@ -223,42 +231,88 @@ const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
 
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="lg:w-2/3 space-y-4">
-          <AnnotationToolbar
-            currentTool={currentTool}
-            onToolSelect={setCurrentTool}
-          />
+          <AnnotationToolbar currentTool={currentTool} onToolSelect={setCurrentTool} />
 
           {selectedTile?.imageUrl ? (
             <div className="relative w-full h-[500px] overflow-hidden border bg-white rounded-xl shadow">
-  <img
-    src={selectedTile.imageUrl}
-    alt={`Tile - ${selectedTile.name}`}
-    className="w-full h-full object-cover"
-    ref={imageRef}
-    onClick={handleImageClick}
-  />
+              <img
+                src={selectedTile.imageUrl}
+                alt={`Tile - ${selectedTile.name}`}
+                className="w-full h-full object-cover"
+                ref={imageRef}
+                onClick={handleImageClick}
+              />
 
-{[...annotations, ...pastAnnotations].map((ann) =>
+              {/* Point Annotations */}
+              {[...annotations, ...pastAnnotations].map((ann) =>
+                ann.type === "point" ? (
+                  <div
+                    key={ann.id}
+                    className="absolute w-4 h-4 bg-red-600 rounded-full border border-white"
+                    style={{
+                      left: `${ann.data.pixelX}px`,
+                      top: `${ann.data.pixelY}px`,
+                      transform: "translate(-50%, -50%)",
+                    }}
+                    title={ann.label}
+                  />
+                ) : null
+              )}
 
-    ann.type === "point" ? (
-      <div
-        key={ann.id}
-        className="absolute w-4 h-4 bg-red-600 rounded-full border border-white"
-        style={{
-          left: `${ann.data.pixelX}px`,
-          top: `${ann.data.pixelY}px`,
-          transform: 'translate(-50%, -50%)',
-        }}
-        title={ann.label}
-      />
-    ) : null
-  )}
-</div>
+              {/* Polygon Preview */}
+              {drawingPolygon && polygonPoints.length > 1 && (
+                <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">
+                  <polygon
+                    points={polygonPoints.map((p) => `${p.x},${p.y}`).join(" ")}
+                    fill="rgba(0,123,255,0.4)"
+                    stroke="#007bff"
+                    strokeWidth={2}
+                  />
+                </svg>
+              )}
 
+              {/* Render Saved Polygon Annotations */}
+              {[...annotations, ...pastAnnotations].map((ann) =>
+                ann.type === "polygon" && Array.isArray(ann.data?.points) ? (
+                  <svg
+                    key={ann.id}
+                    className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                  >
+                    <polygon
+                      points={ann.data.points.map((p: any) => `${p.x},${p.y}`).join(" ")}
+                      fill="rgba(255, 0, 0, 0.3)"
+                      stroke="red"
+                      strokeWidth={2}
+                    />
+                    <text
+                      x={ann.data.points[0].x + 5}
+                      y={ann.data.points[0].y - 5}
+                      fill="red"
+                      fontSize="12px"
+                    >
+                      {ann.label}
+                    </text>
+                  </svg>
+                ) : null
+              )}
+            </div>
           ) : (
             <div className="h-[500px] flex items-center justify-center bg-gray-100 text-gray-600 border rounded shadow">
               No tile image available.
             </div>
+          )}
+
+          {currentTool === "polygon" && drawingPolygon && polygonPoints.length > 2 && (
+            <Button
+              onClick={() => {
+                setCurrentAnnotationData({ points: polygonPoints });
+                setCurrentAnnotationType("polygon");
+                setIsAnnotationDialogOpen(true);
+              }}
+              className="mt-2"
+            >
+              Complete Polygon
+            </Button>
           )}
 
           <div className="flex space-x-4 mt-4">
@@ -297,6 +351,7 @@ const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
           </Card>
         </div>
 
+        {/* Sidebar */}
         <div className="lg:w-1/3 space-y-6">
           <Card className="shadow">
             <CardHeader>
@@ -324,9 +379,7 @@ const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
           <Card className="shadow">
             <CardHeader>
               <CardTitle>Available Tile</CardTitle>
-              <CardDescription>
-                {selectedTile?.name || "Untitled"}
-              </CardDescription>
+              <CardDescription>{selectedTile?.name || "Untitled"}</CardDescription>
             </CardHeader>
             <CardContent>
               <p>Status: {selectedTile?.status}</p>
@@ -335,10 +388,7 @@ const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
         </div>
       </div>
 
-      <Dialog
-        open={isAnnotationDialogOpen}
-        onOpenChange={setIsAnnotationDialogOpen}
-      >
+      <Dialog open={isAnnotationDialogOpen} onOpenChange={setIsAnnotationDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Annotation</DialogTitle>
@@ -370,6 +420,8 @@ const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
   );
 }
+
+

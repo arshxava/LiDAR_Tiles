@@ -18,8 +18,7 @@ export const getAssignedTile = async () => {
 };
 
 export const submitTile = async ({ tileId, annotations }) => {
-  const token = localStorage.getItem("lidarToken");
-
+  const token = localStorage.getItem("lidarToken"); // or "lidarToken", make sure it's consistent
   if (!token) throw new Error("No token found");
 
   const res = await api.post(
