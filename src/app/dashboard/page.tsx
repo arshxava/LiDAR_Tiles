@@ -58,25 +58,33 @@ export default function DashboardPage() {
   const imageRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    } else if (user) {
-      const savedTile = localStorage.getItem("currentTile");
-      const savedAnnotations = localStorage.getItem("currentAnnotations");
-      if (savedTile) {
-        const parsedTile = JSON.parse(savedTile);
+  if (!loading && !user) {
+    router.push("/login");
+  } else if (user) {
+    const savedTile = localStorage.getItem("currentTile");
+    const savedAnnotations = localStorage.getItem("currentAnnotations");
+    if (savedTile) {
+      const parsedTile = JSON.parse(savedTile);
+
+      // ✅ Properly format image URL
+      if (parsedTile.imageUrl && parsedTile.imageUrl.startsWith("/uploads")) {
         parsedTile.imageUrl = `http://localhost:5000${parsedTile.imageUrl}`;
-        setSelectedTile(parsedTile);
-        setLoadingTile(false);
-      } else {
-        fetchAssignedTile();
       }
-      if (savedAnnotations) {
-        setAnnotations(JSON.parse(savedAnnotations));
-      }
-      fetchUserStats();
+
+      setSelectedTile(parsedTile);
+      setLoadingTile(false); // ✅ ADD THIS BACK HERE
+    } else {
+      fetchAssignedTile();
     }
-  }, [user, loading]);
+
+    if (savedAnnotations) {
+      setAnnotations(JSON.parse(savedAnnotations));
+    }
+
+    fetchUserStats();
+  }
+}, [user, loading]);
+
 
   useEffect(() => {
     if (selectedTile) {
@@ -86,29 +94,28 @@ export default function DashboardPage() {
   }, [selectedTile, annotations]);
 
   const fetchAssignedTile = async () => {
-  if (!user?.id) return;
-  try {
-    setLoadingTile(true);
-    const token = localStorage.getItem("lidarToken"); 
-    const tile = await getAssignedTile(token);
+    if (!user?.id) return;
+    try {
+      setLoadingTile(true);
+      const token = localStorage.getItem("lidarToken");
+      const tile = await getAssignedTile(token);
 
-    if (tile?._id) {
-      tile.id = tile._id; // ✅ fix for undefined id
+      if (tile?._id) {
+        tile.id = tile._id;
+      }
+
+      if (tile?.imageUrl && tile.imageUrl.startsWith("/uploads")) {
+        tile.imageUrl = `http://localhost:5000${tile.imageUrl}`;
+      }
+
+      setSelectedTile(tile);
+      setNewTileAssigned(true);
+    } catch (err) {
+      toast({ variant: "destructive", title: "No available tiles" });
+    } finally {
+      setLoadingTile(false);
     }
-
-    if (tile?.imageUrl && tile.imageUrl.startsWith("/uploads")) {
-      tile.imageUrl = `http://localhost:5000${tile.imageUrl}`;
-    }
-
-    setSelectedTile(tile);
-    setNewTileAssigned(true);
-  } catch (err) {
-    toast({ variant: "destructive", title: "No available tiles" });
-  } finally {
-    setLoadingTile(false);
-  }
-};
-
+  };
 
   const fetchUserStats = async () => {
     if (!user?.id) return;
@@ -150,7 +157,6 @@ export default function DashboardPage() {
     if (!selectedTile || !user || !currentAnnotationType || !currentAnnotationData) return;
 
     const newAnn: Annotation = {
-      // id: Date.now().toString(),
       tileId: selectedTile.id,
       userId: user.id,
       type: currentAnnotationType,
@@ -176,30 +182,29 @@ export default function DashboardPage() {
     }
   };
 
- const completeTile = async () => {
-  if (!selectedTile || !selectedTile.id) {
-    toast({ variant: "destructive", title: "Invalid tile. Please reload." });
-    console.error("Invalid selectedTile", selectedTile);
-    return;
-  }
+  const completeTile = async () => {
+    if (!selectedTile || !selectedTile.id) {
+      toast({ variant: "destructive", title: "Invalid tile. Please reload." });
+      console.error("Invalid selectedTile", selectedTile);
+      return;
+    }
 
-  try {
-    await submitTile({
-      tileId: selectedTile.id,
-      annotations,
-    });
-    toast({ title: "Tile Completed!" });
-    setAnnotations([]);
-    localStorage.removeItem("currentTile");
-    localStorage.removeItem("currentAnnotations");
-    await fetchAssignedTile();
-    fetchUserStats();
-  } catch (err) {
-    console.error("Tile submit error", err);
-    toast({ variant: "destructive", title: "Error submitting tile" });
-  }
-};
-
+    try {
+      await submitTile({
+        tileId: selectedTile.id,
+        annotations,
+      });
+      toast({ title: "Tile Completed!" });
+      setAnnotations([]);
+      localStorage.removeItem("currentTile");
+      localStorage.removeItem("currentAnnotations");
+      await fetchAssignedTile();
+      fetchUserStats();
+    } catch (err) {
+      console.error("Tile submit error", err);
+      toast({ variant: "destructive", title: "Error submitting tile" });
+    }
+  };
 
   const skipTile = async () => {
     if (skipCount >= MAX_SKIP) {
@@ -213,6 +218,10 @@ export default function DashboardPage() {
     setSkipCount((prev) => prev + 1);
   };
 
+  const filteredPastAnnotations = pastAnnotations.filter(
+    (a) => a.tileId === selectedTile?.id
+  );
+
   if (loading || !user || loadingTile) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -223,7 +232,7 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-     {newTileAssigned && selectedTile && (
+      {newTileAssigned && selectedTile && (
         <div className="bg-yellow-100 p-3 rounded border">
           New tile assigned: <strong>{selectedTile.name || "Untitled"}</strong>
         </div>
@@ -243,8 +252,7 @@ export default function DashboardPage() {
                 onClick={handleImageClick}
               />
 
-              {/* Point Annotations */}
-              {[...annotations, ...pastAnnotations].map((ann) =>
+              {[...annotations, ...filteredPastAnnotations].map((ann) =>
                 ann.type === "point" ? (
                   <div
                     key={ann.id}
@@ -259,20 +267,7 @@ export default function DashboardPage() {
                 ) : null
               )}
 
-              {/* Polygon Preview */}
-              {drawingPolygon && polygonPoints.length > 1 && (
-                <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">
-                  <polygon
-                    points={polygonPoints.map((p) => `${p.x},${p.y}`).join(" ")}
-                    fill="rgba(0,123,255,0.4)"
-                    stroke="#007bff"
-                    strokeWidth={2}
-                  />
-                </svg>
-              )}
-
-              {/* Render Saved Polygon Annotations */}
-              {[...annotations, ...pastAnnotations].map((ann) =>
+              {[...annotations, ...filteredPastAnnotations].map((ann) =>
                 ann.type === "polygon" && Array.isArray(ann.data?.points) ? (
                   <svg
                     key={ann.id}
@@ -294,6 +289,17 @@ export default function DashboardPage() {
                     </text>
                   </svg>
                 ) : null
+              )}
+
+              {drawingPolygon && polygonPoints.length > 1 && (
+                <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">
+                  <polygon
+                    points={polygonPoints.map((p) => `${p.x},${p.y}`).join(" ")}
+                    fill="rgba(0,123,255,0.4)"
+                    stroke="#007bff"
+                    strokeWidth={2}
+                  />
+                </svg>
               )}
             </div>
           ) : (
@@ -351,7 +357,6 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Sidebar */}
         <div className="lg:w-1/3 space-y-6">
           <Card className="shadow">
             <CardHeader>
@@ -420,8 +425,6 @@ export default function DashboardPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      </div>
+    </div>
   );
 }
-
-
