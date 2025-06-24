@@ -35,30 +35,44 @@ const filteredTiles = statusFilter === "all"
   }, [user, loading, router]);
 
   const fetchTiles = async () => {
-    try {
-      setTileLoading(true);
-      const mapsRes = await axios.get("http://localhost:5000/api/maps");
-      const maps = mapsRes.data;
-      const latest = maps[maps.length - 1];
+  try {
+    setTileLoading(true);
+    const token = localStorage.getItem("lidarToken");
 
-      if (!latest?._id) {
-        console.error("No map found.");
-        return;
-      }
+    const mapsRes = await axios.get("http://localhost:5000/api/maps", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-      setMapName(latest.name || latest._id);
-      setLatestMap(latest);
+    const maps = mapsRes.data;
+    const latest = maps[maps.length - 1];
 
-      const tileRes = await axios.get(
-        `http://localhost:5000/api/maps/${latest._id}/tiles`
-      );
-      setTiles(tileRes.data);
-    } catch (error) {
-      console.error("Error fetching tiles:", error);
-    } finally {
-      setTileLoading(false);
+    if (!latest?._id) {
+      console.error("No map found.");
+      return;
     }
-  };
+
+    setMapName(latest.name || latest._id);
+    setLatestMap(latest);
+
+    const tileRes = await axios.get(
+      `http://localhost:5000/api/maps/${latest._id}/tiles`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setTiles(tileRes.data);
+  } catch (error) {
+    console.error("Error fetching tiles:", error);
+  } finally {
+    setTileLoading(false);
+  }
+};
+
 
   if (loading || !user || user.role !== "SUPER_ADMIN") {
     return (

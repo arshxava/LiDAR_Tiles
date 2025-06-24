@@ -8,17 +8,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default function UploadedMapsModal({ onClose, onSelectMap }) {
   const [maps, setMaps] = useState([]);
 
-  useEffect(() => {
-    const fetchMaps = async () => {
-      try {
-        const res = await axios.get("http://localhost:5000/api/maps");
-        setMaps(res.data || []);
-      } catch (err) {
-        console.error("Error fetching maps:", err);
-      }
-    };
-    fetchMaps();
-  }, []);
+ useEffect(() => {
+  const fetchMaps = async () => {
+    try {
+      const token = localStorage.getItem("lidarToken");
+      const res = await axios.get("http://localhost:5000/api/maps", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setMaps(res.data || []);
+    } catch (err) {
+      console.error("Error fetching maps:", err);
+    }
+  };
+
+  fetchMaps();
+}, []);
+
 
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">

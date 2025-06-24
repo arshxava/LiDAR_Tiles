@@ -25,6 +25,7 @@ export default function MapUploadForm() {
   const [maxLng, setMaxLng] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
+const token = localStorage.getItem("lidarToken");
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -34,67 +35,85 @@ export default function MapUploadForm() {
     }
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+ const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  event.preventDefault();
 
-    if (!mapFile || !mapName.trim()) {
-      toast({
-        variant: "destructive",
-        title: "All fields required",
-        description: "Please provide the map name and file.",
-      });
-      return;
+  if (!mapFile || !mapName.trim()) {
+    toast({
+      variant: "destructive",
+      title: "All fields required",
+      description: "Please provide the map name and file.",
+    });
+    return;
+  }
+
+const token = localStorage.getItem("lidarToken");
+
+  if (!token) {
+    toast({
+      variant: "destructive",
+      title: "Unauthorized",
+      description: "Please login to upload maps.",
+    });
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", mapFile);
+  formData.append("name", mapName);
+  formData.append("description", mapDescription);
+  formData.append("minLat", minLat);
+  formData.append("maxLat", maxLat);
+  formData.append("minLng", minLng);
+  formData.append("maxLng", maxLng);
+  formData.append("tileSizeKm", "10");
+
+  setIsUploading(true);
+  console.log("token",token)
+  try {
+    const res = await fetch("http://localhost:5000/api/maps/upload", {
+      method: "POST",
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${token}`, // ✅ Important
+        // DO NOT manually set Content-Type when using FormData
+      },
+      
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data?.msg || "Upload failed");
     }
 
-    const formData = new FormData();
-    formData.append("file", mapFile);
-    formData.append("name", mapName);
-    formData.append("description", mapDescription);
-    formData.append("minLat", minLat);
-    formData.append("maxLat", maxLat);
-    formData.append("minLng", minLng);
-    formData.append("maxLng", maxLng);
-    formData.append("tileSizeKm", "10");
+    toast({
+      title: "Map uploaded successfully",
+      description: `${data.name} has been processed.`,
+    });
 
-    setIsUploading(true);
-    try {
-      const res = await fetch("http://localhost:5000/api/maps/upload", {
-        method: "POST",
-        body: formData,
-      });
+    // Reset form
+    setMapFile(null);
+    setMapName("");
+    setMapDescription("");
+    setMinLat("");
+    setMaxLat("");
+    setMinLng("");
+    setMaxLng("");
+    const fileInput = document.getElementById(
+      "map-file-input"
+    ) as HTMLInputElement;
+    if (fileInput) fileInput.value = "";
+  } catch (err) {
+    toast({
+      variant: "destructive",
+      title: "Upload Failed",
+      description: (err as any)?.message || "Something went wrong",
+    });
+  }
+  setIsUploading(false);
+};
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data?.msg || "Upload failed");
-      }
-
-      toast({
-        title: "Map uploaded successfully",
-        description: `${data.name} has been processed.`,
-      });
-
-      // Reset form
-      setMapFile(null);
-      setMapName("");
-      setMapDescription("");
-      setMinLat("");
-      setMaxLat("");
-      setMinLng("");
-      setMaxLng("");
-      const fileInput = document.getElementById(
-        "map-file-input"
-      ) as HTMLInputElement;
-      if (fileInput) fileInput.value = "";
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Upload Failed",
-        description: (err as any)?.message || "Something went wrong",
-      });
-    }
-    setIsUploading(false);
-  };
 
   return (
     <Card className="shadow-lg">
