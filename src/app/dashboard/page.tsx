@@ -196,34 +196,39 @@ const fetchAssignedTile = async () => {
     }
   };
 
-  const saveAnnotation = async () => {
-    if (!selectedTile || !user || !currentAnnotationType || !currentAnnotationData) return;
+ const saveAnnotation = async () => {
+  if (!selectedTile || !user || !currentAnnotationType || !currentAnnotationData) return;
 
-    const newAnn: Annotation = {
-      tileId: selectedTile.id,
-      userId: user.id,
-      type: currentAnnotationType,
-      data: currentAnnotationData,
-      label: annotationLabel,
-      notes: annotationNotes,
-      createdAt: new Date().toISOString(),
-    };
-
-    try {
-      await saveAnnotationToDB(newAnn);
-      setAnnotations((prev) => [...prev, newAnn]);
-      setAnnotationLabel("");
-      setAnnotationNotes("");
-      setIsAnnotationDialogOpen(false);
-      setCurrentTool(null);
-      setPolygonPoints([]);
-      setDrawingPolygon(false);
-      toast({ title: "Annotation saved ✅" });
-    } catch (err) {
-      // console.error("Annotation save failed:", err);
-      toast({ variant: "destructive", title: "Failed to save annotation" });
-    }
+  const newAnn: Annotation = {
+    tileId: selectedTile.id,
+    userId: user.id,
+    type: currentAnnotationType,
+    data: currentAnnotationData,
+    label: annotationLabel,
+    notes: annotationNotes,
+    createdAt: new Date().toISOString(),
   };
+
+  try {
+    await saveAnnotationToDB(newAnn);
+
+    setAnnotations((prev) => [...prev, newAnn]);
+    setAnnotationLabel("");
+    setAnnotationNotes("");
+    setIsAnnotationDialogOpen(false);
+    setCurrentTool(null);
+    setPolygonPoints([]);
+    setDrawingPolygon(false);
+    toast({ title: "Annotation saved ✅" });
+
+    // ✅ Refetch user stats to update past annotations, level, and badges
+    fetchUserStats();
+  } catch (err) {
+    // console.error("Annotation save failed:", err);
+    toast({ variant: "destructive", title: "Failed to save annotation" });
+  }
+};
+
 
 
 
@@ -321,11 +326,11 @@ const fetchAssignedTile = async () => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {newTileAssigned && selectedTile && (
+      {/* {newTileAssigned && selectedTile && (
         <div className="bg-yellow-100 p-3 rounded border">
           New tile assigned: <strong>{selectedTile.name || "Untitled"}</strong>
         </div>
-      )}
+      )} */}
 
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="lg:w-2/3 space-y-4">
@@ -472,8 +477,8 @@ const fetchAssignedTile = async () => {
 
           <Card className="shadow">
             <CardHeader>
-              <CardTitle>Available Tile</CardTitle>
-              <CardDescription>{selectedTile?.name || "Untitled"}</CardDescription>
+              <CardTitle>Tile Status</CardTitle>
+              {/* <CardDescription>{selectedTile?.name || "Untitled"}</CardDescription> */}
             </CardHeader>
             <CardContent>
               <p>Status: {selectedTile?.status}</p>
