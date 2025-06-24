@@ -57,23 +57,44 @@ export default function DashboardPage() {
 
   const imageRef = useRef<HTMLImageElement | null>(null);
 
-  useEffect(() => {
-  if (!loading && !user) {
-    router.push("/login");
-  } else if (user) {
-    const savedTile = localStorage.getItem("currentTile");
-    const savedAnnotations = localStorage.getItem("currentAnnotations");
-    if (savedTile) {
-      const parsedTile = JSON.parse(savedTile);
+useEffect(() => {
+  if (!loading && user) {
+    const storedUserId = localStorage.getItem("lastUserId");
 
-      if (parsedTile.imageUrl && parsedTile.imageUrl.startsWith("/uploads")) {
-        parsedTile.imageUrl = `http://localhost:5000${parsedTile.imageUrl}`;
+    // 🔁 If a different user logs in, clear previous tile/annotations
+    if (storedUserId && storedUserId !== user.id) {
+      // console.log("🔄 Detected user switch, clearing localStorage data");
+      localStorage.removeItem("currentTile");
+      localStorage.removeItem("currentAnnotations");
+    }
+
+    // 📝 Save the current user ID
+    localStorage.setItem("lastUserId", user.id);
+
+    const savedTileRaw = localStorage.getItem("currentTile");
+    const savedAnnotations = localStorage.getItem("currentAnnotations");
+
+    let savedTile = null;
+    if (savedTileRaw) {
+      savedTile = JSON.parse(savedTileRaw);
+    }
+
+    const shouldFetchNewTile =
+      !savedTile ||
+      !savedTile.status ||
+      savedTile.status !== "in_progress" ||
+      savedTile.assignedTo !== user.id;
+
+    if (shouldFetchNewTile) {
+      // console.log("📡 No valid saved tile, calling fetchAssignedTile()");
+      fetchAssignedTile();
+    } else {
+      if (savedTile.imageUrl?.startsWith("/uploads")) {
+        savedTile.imageUrl = `http://localhost:5000${savedTile.imageUrl}`;
       }
 
-      setSelectedTile(parsedTile);
-      setLoadingTile(false); 
-    } else {
-      fetchAssignedTile();
+      setSelectedTile(savedTile);
+      setLoadingTile(false);
     }
 
     if (savedAnnotations) {
@@ -81,40 +102,63 @@ export default function DashboardPage() {
     }
 
     fetchUserStats();
+  } else if (!loading && !user) {
+    router.push("/login");
   }
 }, [user, loading]);
 
 
-  useEffect(() => {
-    if (selectedTile) {
-      localStorage.setItem("currentTile", JSON.stringify(selectedTile));
+
+useEffect(() => {
+  if (selectedTile) {
+    localStorage.setItem("currentTile", JSON.stringify(selectedTile));
+  }
+  localStorage.setItem("currentAnnotations", JSON.stringify(annotations));
+}, [selectedTile, annotations]);
+
+
+
+const fetchAssignedTile = async () => {
+  if (!user?.id) {
+    // console.warn("❗ fetchAssignedTile: user.id not available");
+    return;
+  }
+
+  try {
+    setLoadingTile(true);
+    const token = localStorage.getItem("lidarToken");
+
+    if (!token) {
+      // console.error("❌ Token not found in localStorage");
+      return;
     }
-    localStorage.setItem("currentAnnotations", JSON.stringify(annotations));
-  }, [selectedTile, annotations]);
 
-  const fetchAssignedTile = async () => {
-    if (!user?.id) return;
-    try {
-      setLoadingTile(true);
-      const token = localStorage.getItem("lidarToken");
-      const tile = await getAssignedTile(token);
+    // console.log("📡 Fetching tile from backend with token:", token);
 
-      if (tile?._id) {
-        tile.id = tile._id;
-      }
+    const tile = await getAssignedTile(token);
+    // console.log("✅ Received tile:", tile);
 
-      if (tile?.imageUrl && tile.imageUrl.startsWith("/uploads")) {
-        tile.imageUrl = `http://localhost:5000${tile.imageUrl}`;
-      }
-
-      setSelectedTile(tile);
-      setNewTileAssigned(true);
-    } catch (err) {
-      toast({ variant: "destructive", title: "No available tiles" });
-    } finally {
-      setLoadingTile(false);
+    if (!tile) {
+      // console.warn("⚠️ No tile returned from API");
+      return;
     }
-  };
+
+    if (tile?._id) tile.id = tile._id;
+
+    if (tile?.imageUrl?.startsWith("/uploads")) {
+      tile.imageUrl = `http://localhost:5000${tile.imageUrl}`;
+    }
+
+    setSelectedTile(tile);
+    setNewTileAssigned(true);
+  } catch (err) {
+    // console.error("❌ fetchAssignedTile error:", err);
+    toast({ variant: "destructive", title: "No available tiles" });
+  } finally {
+    setLoadingTile(false);
+  }
+};
+
 
   const fetchUserStats = async () => {
     if (!user?.id) return;
@@ -130,7 +174,7 @@ export default function DashboardPage() {
       setBadges(count >= 10 ? ["Veteran Annotator"] : ["Newcomer"]);
       setLeaderboard(leaderboardData);
     } catch (err) {
-      console.error("Stats fetch error:", err);
+      // console.error("Stats fetch error:", err);
     }
   };
 
@@ -176,7 +220,7 @@ export default function DashboardPage() {
       setDrawingPolygon(false);
       toast({ title: "Annotation saved ✅" });
     } catch (err) {
-      console.error("Annotation save failed:", err);
+      // console.error("Annotation save failed:", err);
       toast({ variant: "destructive", title: "Failed to save annotation" });
     }
   };
@@ -184,16 +228,53 @@ export default function DashboardPage() {
 
 
   const skipTile = async () => {
-    if (skipCount >= MAX_SKIP) {
-      toast({ variant: "destructive", title: "Skip limit reached" });
+  if (skipCount >= MAX_SKIP) {
+    toast({ variant: "destructive", title: "Skip limit reached" });
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem("lidarToken");
+
+    if (!token) {
+      toast({ variant: "destructive", title: "Auth token missing" });
       return;
     }
+
+    if (!selectedTile?.id) {
+      toast({ variant: "destructive", title: "No tile to skip" });
+      return;
+    }
+
+    // ✅ Send skip request to backend
+    const res = await fetch(`http://localhost:5000/api/tiles/skip/${selectedTile.id}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to skip tile");
+    }
+
+    // 🧹 Clear local state and storage
     setAnnotations([]);
+    setSelectedTile(null);
     localStorage.removeItem("currentTile");
     localStorage.removeItem("currentAnnotations");
+
+    // 🔄 Fetch new tile
     await fetchAssignedTile();
     setSkipCount((prev) => prev + 1);
-  };
+  } catch (error: any) {
+    // console.error("❌ Skip tile error:", error);
+    toast({ variant: "destructive", title: "Error skipping tile", description: error.message });
+  }
+};
 
   const filteredPastAnnotations = pastAnnotations.filter(
     (a) => a.tileId === selectedTile?.id
@@ -229,7 +310,7 @@ export default function DashboardPage() {
     localStorage.removeItem("currentAnnotations");
     await fetchAssignedTile();
   } catch (err) {
-    console.error("Tile submission failed:", err);
+    // console.error("Tile submission failed:", err);
     toast({
       variant: "destructive",
       title: "Failed to submit tile",
