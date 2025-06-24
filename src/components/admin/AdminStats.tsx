@@ -11,13 +11,13 @@ interface AdminStatsProps {
 export default function AdminStats({ tiles }: AdminStatsProps) {
   const totalTiles = tiles.length;
   const availableTiles = tiles.filter(t => t.status === 'available').length;
-  const assignedTiles = tiles.filter(t => t.status === 'assigned').length;
+  const assignedTiles = tiles.filter(t => t.status === 'in_progress').length;
   const completedTiles = tiles.filter(t => t.status === 'completed').length;
 
   const stats = [
     { title: 'Total Tiles', value: totalTiles, icon: ListChecks, color: 'text-blue-500' },
     { title: 'Available', value: availableTiles, icon: Package, color: 'text-green-500' },
-    { title: 'Assigned', value: assignedTiles, icon: Clock, color: 'text-orange-500' },
+    { title: 'In Progress', value: assignedTiles, icon: Clock, color: 'text-orange-500' },
     { title: 'Completed', value: completedTiles, icon: CheckCircle2, color: 'text-purple-500' },
   ];
 
