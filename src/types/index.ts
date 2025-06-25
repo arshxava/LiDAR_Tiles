@@ -5,6 +5,7 @@ export interface User {
   email: string;
   role: Role;
   name?: string;
+  username: string;
 }
 
 export type TileStatus = 'available' | 'assigned' | 'completed';

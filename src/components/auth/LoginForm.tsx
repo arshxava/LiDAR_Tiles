@@ -40,16 +40,16 @@ export default function LoginForm() {
   });
  
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+   
     try {
       const res = await loginApi({
         email: values.email,
         password: values.password,
       });
- 
+console.log("Logged in user:", res.user.username); // ✅ Should log "rohanxava"
  
       setUser(res.user);
       setToken(res.token);
- 
       toast({
         title: 'Login Successful',
         description: 'Welcome back to LiDAR Explorer!',
@@ -112,7 +112,7 @@ export default function LoginForm() {
           </form>
         </Form>
         <p className="mt-8 text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
+          Don't have an account?{" "}
           <Button variant="link" asChild className="text-accent p-0 h-auto font-semibold hover:text-accent/80">
             <Link href="/register">Register here</Link>
           </Button>
@@ -121,3 +121,5 @@ export default function LoginForm() {
     </div>
   );
 }
+ 
+ 

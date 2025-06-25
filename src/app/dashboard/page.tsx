@@ -1,5 +1,5 @@
 "use client";
-
+ 
 import React, { useState, useEffect, useRef } from "react";
 import AnnotationToolbar from "@/components/map/AnnotationToolbar";
 import type { Tile, Annotation, AnnotationType } from "@/types";
@@ -29,33 +29,40 @@ import { Save, Loader2, SkipForward } from "lucide-react";
 import { getAssignedTile, submitTile } from "../../service/tiles";
 import { getUserAnnotations, getLeaderboard } from "../../service/user";
 import { saveAnnotationToDB } from "../../service/annotations";
-
+ 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-
+ 
   const [selectedTile, setSelectedTile] = useState<Tile | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  const [currentTool, setCurrentTool] = useState<"point" | "polygon" | null>(null);
+  const [currentTool, setCurrentTool] = useState<"point" | "polygon" | null>(
+    null
+  );
   const [isAnnotationDialogOpen, setIsAnnotationDialogOpen] = useState(false);
   const [currentAnnotationData, setCurrentAnnotationData] = useState<any>(null);
-  const [currentAnnotationType, setCurrentAnnotationType] = useState<AnnotationType | null>(null);
+  const [currentAnnotationType, setCurrentAnnotationType] =
+    useState<AnnotationType | null>(null);
   const [annotationLabel, setAnnotationLabel] = useState("");
   const [annotationNotes, setAnnotationNotes] = useState("");
   const [skipCount, setSkipCount] = useState(0);
   const MAX_SKIP = 3;
-
+ 
   const [pastAnnotations, setPastAnnotations] = useState<Annotation[]>([]);
   const [level, setLevel] = useState(1);
   const [badges, setBadges] = useState<string[]>([]);
-  const [leaderboard, setLeaderboard] = useState<{ name: string; count: number }[]>([]);
+const [leaderboard, setLeaderboard] = useState<{ username?: string; name?: string; count: number }[]>([]);
+ 
   const [newTileAssigned, setNewTileAssigned] = useState(false);
   const [loadingTile, setLoadingTile] = useState(true);
   const [drawingPolygon, setDrawingPolygon] = useState(false);
-  const [polygonPoints, setPolygonPoints] = useState<{ x: number; y: number }[]>([]);
-
+  const [polygonPoints, setPolygonPoints] = useState<
+    { x: number; y: number }[]
+  >([]);
+ 
   const imageRef = useRef<HTMLImageElement | null>(null);
+  console.log("response", user);
 
 useEffect(() => {
   if (!loading && user) {
@@ -163,7 +170,7 @@ const fetchAssignedTile = async () => {
   const fetchUserStats = async () => {
     if (!user?.id) return;
     try {
-      const token = localStorage.getItem("token");
+const token = localStorage.getItem("lidarToken");
       const [annotationsData, leaderboardData] = await Promise.all([
         getUserAnnotations(user.id, token),
         getLeaderboard(token),
@@ -441,7 +448,7 @@ const fetchAssignedTile = async () => {
             <CardContent>
               <ScrollArea className="h-48">
                 {pastAnnotations.map((a) => (
-                  <div key={a.id} className="p-2 border-b">
+                  <div key={a._id || a.id} className="p-2 border-b">
                     <strong>{a.label || a.type}</strong> at{" "}
                     {new Date(a.createdAt).toLocaleString()}
                   </div>
@@ -452,28 +459,34 @@ const fetchAssignedTile = async () => {
         </div>
 
         <div className="lg:w-1/3 space-y-6">
-          <Card className="shadow">
+         <Card className="shadow">
             <CardHeader>
               <CardTitle>Gamification</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>🏅 Level: {level}</p>
-              <p>Badges: {badges.join(", ")}</p>
+              <p>
+                <strong>🏅 Level: </strong>
+                {level}
+              </p>
+              <p>
+                <strong>Badges: </strong>
+                {badges.join(", ")}
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="shadow">
-            <CardHeader>
-              <CardTitle>Leaderboard</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {leaderboard.map((u, idx) => (
-                <div key={u.name} className="p-1">
-                  {idx + 1}. {u.name} — {u.count} tiles
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+             <Card className="shadow">
+  <CardHeader>
+    <CardTitle>Leaderboard Stats</CardTitle>
+  </CardHeader>
+  <CardContent>
+   {leaderboard.map((u, idx) => (
+  <div key={u.username || idx} className="p-1">
+    {idx + 1}. {u.username} — {u.count} annotations marked
+  </div>
+))}
+  </CardContent>
+</Card>
 
           <Card className="shadow">
             <CardHeader>
