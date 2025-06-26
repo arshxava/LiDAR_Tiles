@@ -104,10 +104,10 @@ const filteredTiles = statusFilter === "all"
           Map Tile View
         </h3>
         {!tileLoading && latestMap?.fileUrl && (
-          <TileOverlayViewer
-            mapUrl={`http://localhost:5000${latestMap.fileUrl}`}
-            tiles={tiles}
-          />
+        <TileOverlayViewer
+  mapUrl={`http://localhost:5000${latestMap?.fileUrl}`}
+  tiles={tiles}
+/>
         )}
       </section>
 

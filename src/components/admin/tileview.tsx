@@ -1,128 +1,84 @@
-// "use client";
-
-// import React from "react";
-
-// export default function TileOverlayViewer({ mapUrl, tiles }) {
-//   if (!mapUrl || !tiles?.length) return null;
-
-//   // Fix: extract correct bounds
-//   const minLat = Math.min(...tiles.map((t) => t.bounds[0]));
-//   const maxLat = Math.max(...tiles.map((t) => t.bounds[1]));
-//   const minLng = Math.min(...tiles.map((t) => t.bounds[2]));
-//   const maxLng = Math.max(...tiles.map((t) => t.bounds[3]));
-
-//   const containerStyle = {
-//     position: "relative",
-//     width: "100%",
-//     maxWidth: "800px",
-//     margin: "0 auto",
-//   };
-
-//   const imageStyle = {
-//     width: "100%",
-//     display: "block",
-//   };
-
-//   const overlayStyle = {
-//   position: "absolute",
-//   top: 0,
-//   left: 0,
-//   right: 0,
-//   bottom: 0,
-//   pointerEvents: "none",
-//   overflow: "hidden", // ✅ ADD THIS
-// };
-
-//   return (
-//     <div style={containerStyle}>
-//       <img src={mapUrl} alt="Map" style={imageStyle} />
-//       <div style={overlayStyle}>
-//         {tiles.map((tile, index) => {
-//           const [tileMinLat, tileMaxLat, tileMinLng, tileMaxLng] = tile.bounds;
-
-// const top = +(((tileMinLat - minLat) / (maxLat - minLat)) * 100).toFixed(4);
-// const left = +(((tileMinLng - minLng) / (maxLng - minLng)) * 100).toFixed(4);
-// const height = +(((tileMaxLat - tileMinLat) / (maxLat - minLat)) * 100).toFixed(4);
-// const width = +(((tileMaxLng - tileMinLng) / (maxLng - minLng)) * 100).toFixed(4);
-
-//           return (
-//             <div
-//               key={index}
-//               style={{
-//                 position: "absolute",
-//                 border: "1px solid red",
-//                 top: `${top}%`,
-//                 left: `${left}%`,
-//                 width: `${width}%`,
-//                 height: `${height}%`,
-//                 boxSizing: "border-box",
-//               }}
-//               title={`Tile ${index + 1}`}
-//             />
-//           );
-//         })}
-//       </div>
-//     </div>
-//   );
-// }
-
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 
 export default function TileOverlayViewer({ mapUrl, tiles }) {
-  if (!mapUrl || !tiles?.length) return null;
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  if (!mapUrl || tiles.length === 0) return null;
 
   const minLat = Math.min(...tiles.map((t) => t.bounds[0]));
   const maxLat = Math.max(...tiles.map((t) => t.bounds[1]));
   const minLng = Math.min(...tiles.map((t) => t.bounds[2]));
   const maxLng = Math.max(...tiles.map((t) => t.bounds[3]));
 
-  const containerStyle = {
-    position: "relative",
-    width: "100%",
-    maxWidth: "800px",
-    margin: "0 auto",
+  const width = 1000;
+  const height = 1000;
+
+  const drawMap = async () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+
+    ctx.clearRect(0, 0, width, height);
+
+    try {
+      // Draw base map
+      const baseImg = await loadImage(mapUrl);
+      ctx.drawImage(baseImg, 0, 0, width, height);
+
+      // Draw tiles
+      for (const tile of tiles) {
+        const [tileMinLat, tileMaxLat, tileMinLng, tileMaxLng] = tile.bounds;
+
+        const top = ((tileMinLat - minLat) / (maxLat - minLat)) * height;
+        const left = ((tileMinLng - minLng) / (maxLng - minLng)) * width;
+        const tileHeight =
+          ((tileMaxLat - tileMinLat) / (maxLat - minLat)) * height;
+        const tileWidth =
+          ((tileMaxLng - tileMinLng) / (maxLng - minLng)) * width;
+
+        const tileImageUrl =
+          tile.status === "completed" && tile.annotatedImageUrl
+            ? `http://localhost:5000${tile.annotatedImageUrl}`
+            : `http://localhost:5000${tile.imageUrl}`;
+
+        const tileImg = await loadImage(tileImageUrl);
+        ctx.drawImage(tileImg, left, top, tileWidth, tileHeight);
+      }
+
+      // Download
+      const link = document.createElement("a");
+      link.download = "annotated_map.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (err) {
+      console.error("Error generating map:", err);
+    }
   };
 
-  const imageStyle = {
-    width: "100%",
-    display: "block",
-  };
-
-  const overlayStyle = {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    pointerEvents: "none",
-    overflow: "hidden",
-  };
+  const loadImage = (src: string): Promise<HTMLImageElement> =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
 
   return (
-    <div style={containerStyle}>
-      <img src={mapUrl} alt="Map" style={imageStyle} />
-      <div style={overlayStyle}>
+    <>
+    <div className="relative w-full max-w-[800px] mx-auto">
+      <img src={mapUrl} alt="Base Map" className="w-full" />
+
+      <div className="absolute inset-0 pointer-events-none">
         {tiles.map((tile, index) => {
           const [tileMinLat, tileMaxLat, tileMinLng, tileMaxLng] = tile.bounds;
 
-          const top = +(
-            ((tileMinLat - minLat) / (maxLat - minLat)) *
-            100
-          ).toFixed(4);
-          const left = +(
-            ((tileMinLng - minLng) / (maxLng - minLng)) *
-            100
-          ).toFixed(4);
-          const height = +(
-            ((tileMaxLat - tileMinLat) / (maxLat - minLat)) *
-            100
-          ).toFixed(4);
-          const width = +(
-            ((tileMaxLng - tileMinLng) / (maxLng - minLng)) *
-            100
-          ).toFixed(4);
+          const top = ((tileMinLat - minLat) / (maxLat - minLat)) * 100;
+          const left = ((tileMinLng - minLng) / (maxLng - minLng)) * 100;
+          const height = ((tileMaxLat - tileMinLat) / (maxLat - minLat)) * 100;
+          const width = ((tileMaxLng - tileMinLng) / (maxLng - minLng)) * 100;
 
           const tileImageUrl =
             tile.status === "completed" && tile.annotatedImageUrl
@@ -138,11 +94,9 @@ export default function TileOverlayViewer({ mapUrl, tiles }) {
                 left: `${left}%`,
                 width: `${width}%`,
                 height: `${height}%`,
-                boxSizing: "border-box",
-                overflow: "hidden",
                 border: "1px solid red",
+                overflow: "hidden",
               }}
-              title={`Tile ${index + 1}`}
             >
               <img
                 src={tileImageUrl}
@@ -153,6 +107,25 @@ export default function TileOverlayViewer({ mapUrl, tiles }) {
           );
         })}
       </div>
+
+      
+
+      {/* Hidden canvas */}
+      <canvas
+        ref={canvasRef}
+        width={width}
+        height={height}
+        style={{ display: "none" }}
+      />
     </div>
+    <div className="text-center mt-4">
+        <button
+          onClick={drawMap}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
+        >
+          Download Annotated Map
+        </button>
+      </div>
+      </>
   );
 }

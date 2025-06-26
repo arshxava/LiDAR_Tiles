@@ -524,16 +524,32 @@ export default function DashboardPage() {
                 ) : null
               )}
 
-              {drawingPolygon && polygonPoints.length > 1 && (
-                <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">
-                  <polygon
-                    points={polygonPoints.map((p) => `${p.x},${p.y}`).join(" ")}
-                    fill="rgba(0,123,255,0.4)"
-                    stroke="#007bff"
-                    strokeWidth={2}
-                  />
-                </svg>
-              )}
+              {drawingPolygon && polygonPoints.length > 1 && imageRef.current && (
+  <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">
+    {(() => {
+      const rect = imageRef.current.getBoundingClientRect();
+      const scale = Math.min(
+        rect.width / imageRef.current.naturalWidth,
+        rect.height / imageRef.current.naturalHeight
+      );
+      const offsetX = (rect.width - imageRef.current.naturalWidth * scale) / 2;
+      const offsetY = (rect.height - imageRef.current.naturalHeight * scale) / 2;
+
+      const scaledPoints = polygonPoints
+        .map((p) => `${p.x * scale + offsetX},${p.y * scale + offsetY}`)
+        .join(" ");
+
+      return (
+        <polygon
+          points={scaledPoints}
+          fill="rgba(0,123,255,0.4)"
+          stroke="#007bff"
+          strokeWidth={2}
+        />
+      );
+    })()}
+  </svg>
+)}
             </div>
           ) : (
             <div className="h-[500px] flex items-center justify-center bg-gray-100 text-gray-600 border rounded shadow">
