@@ -21,14 +21,12 @@ export const getAssignedTile = async () => {
 
 
 export const submitTile = async ({ tileId, annotations }) => {
-  const token = localStorage.getItem("lidarToken"); 
+  const token = localStorage.getItem("lidarToken");
   if (!token) throw new Error("No token found");
-
-  const annotationIds = annotations.map(a => a._id || a.id); // extract only IDs
 
   const res = await api.post(
     `/tiles/complete/${tileId}`,
-    { annotations: annotationIds }, // ✅ pass only IDs
+    { annotations }, 
     {
       headers: {
         Authorization: `Bearer ${token}`,

@@ -1,5 +1,5 @@
 "use client";
- 
+
 import React, { useState, useEffect, useRef } from "react";
 import AnnotationToolbar from "@/components/map/AnnotationToolbar";
 import type { Tile, Annotation, AnnotationType } from "@/types";
@@ -29,12 +29,12 @@ import { Save, Loader2, SkipForward } from "lucide-react";
 import { getAssignedTile, submitTile } from "../../service/tiles";
 import { getUserAnnotations, getLeaderboard } from "../../service/user";
 import { saveAnnotationToDB } from "../../service/annotations";
- 
+
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
- 
+
   const [selectedTile, setSelectedTile] = useState<Tile | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [currentTool, setCurrentTool] = useState<"point" | "polygon" | null>(
@@ -48,129 +48,126 @@ export default function DashboardPage() {
   const [annotationNotes, setAnnotationNotes] = useState("");
   const [skipCount, setSkipCount] = useState(0);
   const MAX_SKIP = 3;
- 
+
   const [pastAnnotations, setPastAnnotations] = useState<Annotation[]>([]);
   const [level, setLevel] = useState(1);
   const [badges, setBadges] = useState<string[]>([]);
-const [leaderboard, setLeaderboard] = useState<{ username?: string; name?: string; count: number }[]>([]);
- 
+  const [leaderboard, setLeaderboard] = useState<
+    { username?: string; name?: string; count: number }[]
+  >([]);
+
   const [newTileAssigned, setNewTileAssigned] = useState(false);
   const [loadingTile, setLoadingTile] = useState(true);
   const [drawingPolygon, setDrawingPolygon] = useState(false);
   const [polygonPoints, setPolygonPoints] = useState<
     { x: number; y: number }[]
   >([]);
- 
+
   const imageRef = useRef<HTMLImageElement | null>(null);
   console.log("response", user);
 
-useEffect(() => {
-  if (!loading && user) {
-    const storedUserId = localStorage.getItem("lastUserId");
+  useEffect(() => {
+    if (!loading && user) {
+      const storedUserId = localStorage.getItem("lastUserId");
 
-    // 🔁 If a different user logs in, clear previous tile/annotations
-    if (storedUserId && storedUserId !== user.id) {
-      // console.log("🔄 Detected user switch, clearing localStorage data");
-      localStorage.removeItem("currentTile");
-      localStorage.removeItem("currentAnnotations");
-    }
-
-    // 📝 Save the current user ID
-    localStorage.setItem("lastUserId", user.id);
-
-    const savedTileRaw = localStorage.getItem("currentTile");
-    const savedAnnotations = localStorage.getItem("currentAnnotations");
-
-    let savedTile = null;
-    if (savedTileRaw) {
-      savedTile = JSON.parse(savedTileRaw);
-    }
-
-    const shouldFetchNewTile =
-      !savedTile ||
-      !savedTile.status ||
-      savedTile.status !== "in_progress" ||
-      savedTile.assignedTo !== user.id;
-
-    if (shouldFetchNewTile) {
-      // console.log("📡 No valid saved tile, calling fetchAssignedTile()");
-      fetchAssignedTile();
-    } else {
-      if (savedTile.imageUrl?.startsWith("/uploads")) {
-        savedTile.imageUrl = `http://localhost:5000${savedTile.imageUrl}`;
+      // 🔁 If a different user logs in, clear previous tile/annotations
+      if (storedUserId && storedUserId !== user.id) {
+        // console.log("🔄 Detected user switch, clearing localStorage data");
+        localStorage.removeItem("currentTile");
+        localStorage.removeItem("currentAnnotations");
       }
 
-      setSelectedTile(savedTile);
+      // 📝 Save the current user ID
+      localStorage.setItem("lastUserId", user.id);
+
+      const savedTileRaw = localStorage.getItem("currentTile");
+      const savedAnnotations = localStorage.getItem("currentAnnotations");
+
+      let savedTile = null;
+      if (savedTileRaw) {
+        savedTile = JSON.parse(savedTileRaw);
+      }
+
+      const shouldFetchNewTile =
+        !savedTile ||
+        !savedTile.status ||
+        savedTile.status !== "in_progress" ||
+        savedTile.assignedTo !== user.id;
+
+      if (shouldFetchNewTile) {
+        // console.log("📡 No valid saved tile, calling fetchAssignedTile()");
+        fetchAssignedTile();
+      } else {
+        if (savedTile.imageUrl?.startsWith("/uploads")) {
+          savedTile.imageUrl = `http://localhost:5000${savedTile.imageUrl}`;
+        }
+
+        setSelectedTile(savedTile);
+        setLoadingTile(false);
+      }
+
+      if (savedAnnotations) {
+        setAnnotations(JSON.parse(savedAnnotations));
+      }
+
+      fetchUserStats();
+    } else if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [user, loading]);
+
+  useEffect(() => {
+    if (selectedTile) {
+      localStorage.setItem("currentTile", JSON.stringify(selectedTile));
+    }
+    localStorage.setItem("currentAnnotations", JSON.stringify(annotations));
+  }, [selectedTile, annotations]);
+
+  const fetchAssignedTile = async () => {
+    if (!user?.id) {
+      // console.warn("❗ fetchAssignedTile: user.id not available");
+      return;
+    }
+
+    try {
+      setLoadingTile(true);
+      const token = localStorage.getItem("lidarToken");
+
+      if (!token) {
+        // console.error("❌ Token not found in localStorage");
+        return;
+      }
+
+      // console.log("📡 Fetching tile from backend with token:", token);
+
+      const tile = await getAssignedTile(token);
+      // console.log("✅ Received tile:", tile);
+
+      if (!tile) {
+        // console.warn("⚠️ No tile returned from API");
+        return;
+      }
+
+      if (tile?._id) tile.id = tile._id;
+
+      if (tile?.imageUrl?.startsWith("/uploads")) {
+        tile.imageUrl = `http://localhost:5000${tile.imageUrl}`;
+      }
+
+      setSelectedTile(tile);
+      setNewTileAssigned(true);
+    } catch (err) {
+      // console.error("❌ fetchAssignedTile error:", err);
+      toast({ variant: "destructive", title: "No available tiles" });
+    } finally {
       setLoadingTile(false);
     }
-
-    if (savedAnnotations) {
-      setAnnotations(JSON.parse(savedAnnotations));
-    }
-
-    fetchUserStats();
-  } else if (!loading && !user) {
-    router.push("/login");
-  }
-}, [user, loading]);
-
-
-
-useEffect(() => {
-  if (selectedTile) {
-    localStorage.setItem("currentTile", JSON.stringify(selectedTile));
-  }
-  localStorage.setItem("currentAnnotations", JSON.stringify(annotations));
-}, [selectedTile, annotations]);
-
-
-
-const fetchAssignedTile = async () => {
-  if (!user?.id) {
-    // console.warn("❗ fetchAssignedTile: user.id not available");
-    return;
-  }
-
-  try {
-    setLoadingTile(true);
-    const token = localStorage.getItem("lidarToken");
-
-    if (!token) {
-      // console.error("❌ Token not found in localStorage");
-      return;
-    }
-
-    // console.log("📡 Fetching tile from backend with token:", token);
-
-    const tile = await getAssignedTile(token);
-    // console.log("✅ Received tile:", tile);
-
-    if (!tile) {
-      // console.warn("⚠️ No tile returned from API");
-      return;
-    }
-
-    if (tile?._id) tile.id = tile._id;
-
-    if (tile?.imageUrl?.startsWith("/uploads")) {
-      tile.imageUrl = `http://localhost:5000${tile.imageUrl}`;
-    }
-
-    setSelectedTile(tile);
-    setNewTileAssigned(true);
-  } catch (err) {
-    // console.error("❌ fetchAssignedTile error:", err);
-    toast({ variant: "destructive", title: "No available tiles" });
-  } finally {
-    setLoadingTile(false);
-  }
-};
-
+  };
 
   const fetchUserStats = async () => {
     if (!user?.id) return;
     try {
-const token = localStorage.getItem("lidarToken");
+      const token = localStorage.getItem("lidarToken");
       const [annotationsData, leaderboardData] = await Promise.all([
         getUserAnnotations(user.id, token),
         getLeaderboard(token),
@@ -185,11 +182,48 @@ const token = localStorage.getItem("lidarToken");
     }
   };
 
+  // const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
+  //   if (!imageRef.current) return;
+  //   const rect = imageRef.current.getBoundingClientRect();
+  //   const x = e.clientX - rect.left;
+  //   const y = e.clientY - rect.top;
+
+  //   if (currentTool === "point") {
+  //     setCurrentAnnotationData({ pixelX: x, pixelY: y });
+  //     setCurrentAnnotationType("point");
+  //     setIsAnnotationDialogOpen(true);
+  //   }
+
+  //   if (currentTool === "polygon") {
+  //     setPolygonPoints((prev) => [...prev, { x, y }]);
+  //     setDrawingPolygon(true);
+  //   }
+  // };
+
+  const getScreenPosition = (x: number, y: number) => {
+    if (!imageRef.current) return { x, y };
+    const rect = imageRef.current.getBoundingClientRect();
+    const scale = Math.min(
+      rect.width / imageRef.current.naturalWidth,
+      rect.height / imageRef.current.naturalHeight
+    );
+    const offsetX = (rect.width - imageRef.current.naturalWidth * scale) / 2;
+    const offsetY = (rect.height - imageRef.current.naturalHeight * scale) / 2;
+    return { x: x * scale + offsetX, y: y * scale + offsetY };
+  };
+
   const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
     if (!imageRef.current) return;
     const rect = imageRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const scale = Math.min(
+      rect.width / imageRef.current.naturalWidth,
+      rect.height / imageRef.current.naturalHeight
+    );
+    const offsetX = (rect.width - imageRef.current.naturalWidth * scale) / 2;
+    const offsetY = (rect.height - imageRef.current.naturalHeight * scale) / 2;
+
+    const x = (e.clientX - rect.left - offsetX) / scale;
+    const y = (e.clientY - rect.top - offsetY) / scale;
 
     if (currentTool === "point") {
       setCurrentAnnotationData({ pixelX: x, pixelY: y });
@@ -203,90 +237,107 @@ const token = localStorage.getItem("lidarToken");
     }
   };
 
- const saveAnnotation = async () => {
-  if (!selectedTile || !user || !currentAnnotationType || !currentAnnotationData) return;
+  const saveAnnotation = async () => {
+    if (
+      !selectedTile ||
+      !user ||
+      !currentAnnotationType ||
+      !currentAnnotationData
+    )
+      return;
 
-  const newAnn: Annotation = {
-    tileId: selectedTile.id,
-    userId: user.id,
-    type: currentAnnotationType,
-    data: currentAnnotationData,
-    label: annotationLabel,
-    notes: annotationNotes,
-    createdAt: new Date().toISOString(),
+    const newAnn: Annotation = {
+      tileId: selectedTile.id,
+      userId: user.id,
+      type: currentAnnotationType,
+      data: currentAnnotationData,
+      label: annotationLabel,
+      notes: annotationNotes,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      const savedAnn = await saveAnnotationToDB(newAnn);
+      setAnnotations((prev) => [...prev, savedAnn]);
+
+      console.log("✅ Saved annotation:", savedAnn); // 🔍 Add this line
+
+      if (!savedAnn || !savedAnn.type || !savedAnn.data) {
+        console.error("❌ Invalid saved annotation:", savedAnn);
+        return;
+      }
+
+      setAnnotations((prev) => [...prev, savedAnn]); // ✅ Append valid saved annotation
+      setAnnotationLabel("");
+      setAnnotationNotes("");
+      setIsAnnotationDialogOpen(false);
+      setCurrentTool(null);
+      setPolygonPoints([]);
+      setDrawingPolygon(false);
+      toast({ title: "Annotation saved ✅" });
+
+      fetchUserStats(); // optional
+    } catch (err) {
+      console.error("❌ Annotation save failed:", err);
+      toast({ variant: "destructive", title: "Failed to save annotation" });
+    }
   };
 
-  try {
-    await saveAnnotationToDB(newAnn);
-
-    setAnnotations((prev) => [...prev, newAnn]);
-    setAnnotationLabel("");
-    setAnnotationNotes("");
-    setIsAnnotationDialogOpen(false);
-    setCurrentTool(null);
-    setPolygonPoints([]);
-    setDrawingPolygon(false);
-    toast({ title: "Annotation saved ✅" });
-
-    // ✅ Refetch user stats to update past annotations, level, and badges
-    fetchUserStats();
-  } catch (err) {
-    // console.error("Annotation save failed:", err);
-    toast({ variant: "destructive", title: "Failed to save annotation" });
-  }
-};
-
-
-
-
   const skipTile = async () => {
-  if (skipCount >= MAX_SKIP) {
-    toast({ variant: "destructive", title: "Skip limit reached" });
-    return;
-  }
-
-  try {
-    const token = localStorage.getItem("lidarToken");
-
-    if (!token) {
-      toast({ variant: "destructive", title: "Auth token missing" });
+    if (skipCount >= MAX_SKIP) {
+      toast({ variant: "destructive", title: "Skip limit reached" });
       return;
     }
 
-    if (!selectedTile?.id) {
-      toast({ variant: "destructive", title: "No tile to skip" });
-      return;
+    try {
+      const token = localStorage.getItem("lidarToken");
+
+      if (!token) {
+        toast({ variant: "destructive", title: "Auth token missing" });
+        return;
+      }
+
+      if (!selectedTile?.id) {
+        toast({ variant: "destructive", title: "No tile to skip" });
+        return;
+      }
+
+      // ✅ Send skip request to backend
+      const res = await fetch(
+        `http://localhost:5000/api/tiles/skip/${selectedTile.id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to skip tile");
+      }
+
+      // 🧹 Clear local state and storage
+      setAnnotations([]);
+      setSelectedTile(null);
+      localStorage.removeItem("currentTile");
+      localStorage.removeItem("currentAnnotations");
+
+      // 🔄 Fetch new tile
+      await fetchAssignedTile();
+      setSkipCount((prev) => prev + 1);
+    } catch (error: any) {
+      // console.error("❌ Skip tile error:", error);
+      toast({
+        variant: "destructive",
+        title: "Error skipping tile",
+        description: error.message,
+      });
     }
-
-    // ✅ Send skip request to backend
-    const res = await fetch(`http://localhost:5000/api/tiles/skip/${selectedTile.id}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.message || "Failed to skip tile");
-    }
-
-    // 🧹 Clear local state and storage
-    setAnnotations([]);
-    setSelectedTile(null);
-    localStorage.removeItem("currentTile");
-    localStorage.removeItem("currentAnnotations");
-
-    // 🔄 Fetch new tile
-    await fetchAssignedTile();
-    setSkipCount((prev) => prev + 1);
-  } catch (error: any) {
-    // console.error("❌ Skip tile error:", error);
-    toast({ variant: "destructive", title: "Error skipping tile", description: error.message });
-  }
-};
+  };
 
   const filteredPastAnnotations = pastAnnotations.filter(
     (a) => a.tileId === selectedTile?.id
@@ -299,37 +350,68 @@ const token = localStorage.getItem("lidarToken");
       </div>
     );
   }
+  //   const completeTile = async () => {
+  //   if (!selectedTile || annotations.length === 0) {
+  //     toast({
+  //       variant: "destructive",
+  //       title: "No annotations to submit",
+  //     });
+  //     return;
+  //   }
+
+  //   try {
+  //     await submitTile({
+  //       tileId: selectedTile.id,
+  //       annotations,
+  //     });
+
+  //     toast({ title: "Tile submitted successfully ✅" });
+
+  //     // Clear local data and fetch a new tile
+  //     setAnnotations([]);
+  //     localStorage.removeItem("currentTile");
+  //     localStorage.removeItem("currentAnnotations");
+  //     await fetchAssignedTile();
+  //   } catch (err) {
+  //     // console.error("Tile submission failed:", err);
+  //     toast({
+  //       variant: "destructive",
+  //       title: "Failed to submit tile",
+  //     });
+  //   }
+  // };
+
   const completeTile = async () => {
-  if (!selectedTile || annotations.length === 0) {
-    toast({
-      variant: "destructive",
-      title: "No annotations to submit",
-    });
-    return;
-  }
+    const validAnnotations = annotations.filter((a) => a && a.type && a.data);
 
-  try {
-    await submitTile({
-      tileId: selectedTile.id,
-      annotations,
-    });
+    if (!selectedTile || validAnnotations.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No annotations to submit",
+      });
+      return;
+    }
 
-    toast({ title: "Tile submitted successfully ✅" });
+    try {
+      console.log("📦 Submitting annotations:", annotations);
+      await submitTile({
+        tileId: selectedTile.id,
+        annotations,
+      });
 
-    // Clear local data and fetch a new tile
-    setAnnotations([]);
-    localStorage.removeItem("currentTile");
-    localStorage.removeItem("currentAnnotations");
-    await fetchAssignedTile();
-  } catch (err) {
-    // console.error("Tile submission failed:", err);
-    toast({
-      variant: "destructive",
-      title: "Failed to submit tile",
-    });
-  }
-};
+      toast({ title: "Tile submitted successfully ✅" });
 
+      setAnnotations([]);
+      localStorage.removeItem("currentTile");
+      localStorage.removeItem("currentAnnotations");
+      await fetchAssignedTile();
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Failed to submit tile",
+      });
+    }
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -341,14 +423,17 @@ const token = localStorage.getItem("lidarToken");
 
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="lg:w-2/3 space-y-4">
-          <AnnotationToolbar currentTool={currentTool} onToolSelect={setCurrentTool} />
+          <AnnotationToolbar
+            currentTool={currentTool}
+            onToolSelect={setCurrentTool}
+          />
 
           {selectedTile?.imageUrl ? (
             <div className="relative w-full h-[500px] overflow-hidden border bg-white rounded-xl shadow">
               <img
                 src={selectedTile.imageUrl}
                 alt={`Tile - ${selectedTile.name}`}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 ref={imageRef}
                 onClick={handleImageClick}
               />
@@ -359,9 +444,29 @@ const token = localStorage.getItem("lidarToken");
                     key={ann.id}
                     className="absolute w-4 h-4 bg-red-600 rounded-full border border-white"
                     style={{
-                      left: `${ann.data.pixelX}px`,
-                      top: `${ann.data.pixelY}px`,
-                      transform: "translate(-50%, -50%)",
+                      ...(imageRef.current &&
+                        (() => {
+                          const rect = imageRef.current.getBoundingClientRect();
+                          const scale = Math.min(
+                            rect.width / imageRef.current.naturalWidth,
+                            rect.height / imageRef.current.naturalHeight
+                          );
+
+                          const offsetX =
+                            (rect.width -
+                              imageRef.current.naturalWidth * scale) /
+                            2;
+                          const offsetY =
+                            (rect.height -
+                              imageRef.current.naturalHeight * scale) /
+                            2;
+
+                          return {
+                            left: `${ann.data.pixelX * scale + offsetX}px`,
+                            top: `${ann.data.pixelY * scale + offsetY}px`,
+                            transform: "translate(-50%, -50%)",
+                          };
+                        })()),
                     }}
                     title={ann.label}
                   />
@@ -374,20 +479,47 @@ const token = localStorage.getItem("lidarToken");
                     key={ann.id}
                     className="absolute top-0 left-0 w-full h-full pointer-events-none"
                   >
-                    <polygon
-                      points={ann.data.points.map((p: any) => `${p.x},${p.y}`).join(" ")}
-                      fill="rgba(255, 0, 0, 0.3)"
-                      stroke="red"
-                      strokeWidth={2}
-                    />
-                    <text
-                      x={ann.data.points[0].x + 5}
-                      y={ann.data.points[0].y - 5}
-                      fill="red"
-                      fontSize="12px"
-                    >
-                      {ann.label}
-                    </text>
+                    {(() => {
+                      if (!imageRef.current) return null;
+
+                      const rect = imageRef.current.getBoundingClientRect();
+                      const scale = Math.min(
+                        rect.width / imageRef.current.naturalWidth,
+                        rect.height / imageRef.current.naturalHeight
+                      );
+                      const offsetX =
+                        (rect.width - imageRef.current.naturalWidth * scale) /
+                        2;
+                      const offsetY =
+                        (rect.height - imageRef.current.naturalHeight * scale) /
+                        2;
+
+                      const scaledPoints = ann.data.points
+                        .map(
+                          (p: any) =>
+                            `${p.x * scale + offsetX},${p.y * scale + offsetY}`
+                        )
+                        .join(" ");
+
+                      return (
+                        <>
+                          <polygon
+                            points={scaledPoints}
+                            fill="rgba(255, 0, 0, 0.3)"
+                            stroke="red"
+                            strokeWidth={2}
+                          />
+                          <text
+                            x={ann.data.points[0].x * scale + offsetX + 5}
+                            y={ann.data.points[0].y * scale + offsetY - 5}
+                            fill="red"
+                            fontSize="12px"
+                          >
+                            {ann.label}
+                          </text>
+                        </>
+                      );
+                    })()}
                   </svg>
                 ) : null
               )}
@@ -409,18 +541,20 @@ const token = localStorage.getItem("lidarToken");
             </div>
           )}
 
-          {currentTool === "polygon" && drawingPolygon && polygonPoints.length > 2 && (
-            <Button
-              onClick={() => {
-                setCurrentAnnotationData({ points: polygonPoints });
-                setCurrentAnnotationType("polygon");
-                setIsAnnotationDialogOpen(true);
-              }}
-              className="mt-2"
-            >
-              Complete Polygon
-            </Button>
-          )}
+          {currentTool === "polygon" &&
+            drawingPolygon &&
+            polygonPoints.length > 2 && (
+              <Button
+                onClick={() => {
+                  setCurrentAnnotationData({ points: polygonPoints });
+                  setCurrentAnnotationType("polygon");
+                  setIsAnnotationDialogOpen(true);
+                }}
+                className="mt-2"
+              >
+                Complete Polygon
+              </Button>
+            )}
 
           <div className="flex space-x-4 mt-4">
             <Button onClick={completeTile} disabled={loadingTile}>
@@ -459,7 +593,7 @@ const token = localStorage.getItem("lidarToken");
         </div>
 
         <div className="lg:w-1/3 space-y-6">
-         <Card className="shadow">
+          <Card className="shadow">
             <CardHeader>
               <CardTitle>Gamification</CardTitle>
             </CardHeader>
@@ -475,18 +609,18 @@ const token = localStorage.getItem("lidarToken");
             </CardContent>
           </Card>
 
-             <Card className="shadow">
-  <CardHeader>
-    <CardTitle>Leaderboard Stats</CardTitle>
-  </CardHeader>
-  <CardContent>
-   {leaderboard.map((u, idx) => (
-  <div key={u.username || idx} className="p-1">
-    {idx + 1}. {u.username} — {u.count} annotations marked
-  </div>
-))}
-  </CardContent>
-</Card>
+          <Card className="shadow">
+            <CardHeader>
+              <CardTitle>Leaderboard Stats</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {leaderboard.map((u, idx) => (
+                <div key={u.username || idx} className="p-1">
+                  {idx + 1}. {u.username} — {u.count} annotations marked
+                </div>
+              ))}
+            </CardContent>
+          </Card>
 
           <Card className="shadow">
             <CardHeader>
@@ -500,7 +634,10 @@ const token = localStorage.getItem("lidarToken");
         </div>
       </div>
 
-      <Dialog open={isAnnotationDialogOpen} onOpenChange={setIsAnnotationDialogOpen}>
+      <Dialog
+        open={isAnnotationDialogOpen}
+        onOpenChange={setIsAnnotationDialogOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Annotation</DialogTitle>
