@@ -14,6 +14,8 @@ export default function TileOverlayViewer({ mapUrl, tiles }) {
 
   const width = 1000;
   const height = 1000;
+const getFullUrl = (url: string) =>
+  url?.startsWith("http") ? url : `http://localhost:5000${url}`;
 
   const drawMap = async () => {
     const canvas = canvasRef.current;
@@ -24,7 +26,7 @@ export default function TileOverlayViewer({ mapUrl, tiles }) {
 
     try {
       // Draw base map
-      const baseImg = await loadImage(mapUrl);
+const baseImg = await loadImage(getFullUrl(mapUrl));
       ctx.drawImage(baseImg, 0, 0, width, height);
 
       // Draw tiles
@@ -39,11 +41,11 @@ export default function TileOverlayViewer({ mapUrl, tiles }) {
           ((tileMaxLng - tileMinLng) / (maxLng - minLng)) * width;
 
         const tileImageUrl =
-          tile.status === "completed" && tile.annotatedImageUrl
-            ? `http://localhost:5000${tile.annotatedImageUrl}`
-            : `http://localhost:5000${tile.imageUrl}`;
+  tile.status === "completed" && tile.annotatedImageUrl
+    ? getFullUrl(tile.annotatedImageUrl)
+    : getFullUrl(tile.imageUrl);
 
-        const tileImg = await loadImage(tileImageUrl);
+const tileImg = await loadImage(tileImageUrl);
         ctx.drawImage(tileImg, left, top, tileWidth, tileHeight);
       }
 
@@ -81,9 +83,9 @@ export default function TileOverlayViewer({ mapUrl, tiles }) {
           const width = ((tileMaxLng - tileMinLng) / (maxLng - minLng)) * 100;
 
           const tileImageUrl =
-            tile.status === "completed" && tile.annotatedImageUrl
-              ? `http://localhost:5000${tile.annotatedImageUrl}`
-              : `http://localhost:5000${tile.imageUrl}`;
+  tile.status === "completed" && tile.annotatedImageUrl
+    ? getFullUrl(tile.annotatedImageUrl)
+    : getFullUrl(tile.imageUrl);
 
           return (
             <div

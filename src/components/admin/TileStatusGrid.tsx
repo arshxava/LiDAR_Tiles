@@ -31,7 +31,7 @@ export default function TileStatusGrid({ tiles }) {
               {/* Tile Image */}
               {tile.imageUrl ? (
                 <img
-                  src={`http://localhost:5000${tile.imageUrl}`}
+                  src={tile.imageUrl}
                   alt={`Tile ${tile._id}`}
                   className="w-full h-32 object-cover rounded mb-2 border"
                 />
