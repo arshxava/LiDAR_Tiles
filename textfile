@@ -1,0 +1,8 @@
+commands to setup-
+to install packages- npm i 
+
+
+
+
+to run the server use the command
+node server.js
