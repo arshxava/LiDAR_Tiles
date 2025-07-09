@@ -37,9 +37,8 @@ export default function DashboardPage() {
 
   const [selectedTile, setSelectedTile] = useState<Tile | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  const [currentTool, setCurrentTool] = useState<"point" | "polygon" | null>(
-    null
-  );
+  // const [currentTool, setCurrentTool] = useState<"point" | "polygon" | null>(null);
+  const [currentTool, setCurrentTool] = useState<"polygon" | null>(null);
   const [isAnnotationDialogOpen, setIsAnnotationDialogOpen] = useState(false);
   const [currentAnnotationData, setCurrentAnnotationData] = useState<any>(null);
   const [currentAnnotationType, setCurrentAnnotationType] =
@@ -225,11 +224,11 @@ export default function DashboardPage() {
     const x = (e.clientX - rect.left - offsetX) / scale;
     const y = (e.clientY - rect.top - offsetY) / scale;
 
-    if (currentTool === "point") {
-      setCurrentAnnotationData({ pixelX: x, pixelY: y });
-      setCurrentAnnotationType("point");
-      setIsAnnotationDialogOpen(true);
-    }
+    // if (currentTool === "point") {
+    //   setCurrentAnnotationData({ pixelX: x, pixelY: y });
+    //   setCurrentAnnotationType("point");
+    //   setIsAnnotationDialogOpen(true);
+    // }
 
     if (currentTool === "polygon") {
       setPolygonPoints((prev) => [...prev, { x, y }]);
@@ -438,7 +437,7 @@ export default function DashboardPage() {
                 onClick={handleImageClick}
               />
 
-              {[...annotations, ...filteredPastAnnotations].map((ann) =>
+              {/* {[...annotations, ...filteredPastAnnotations].map((ann) =>
                 ann.type === "point" ? (
                   <div
                     key={ann.id}
@@ -471,7 +470,7 @@ export default function DashboardPage() {
                     title={ann.label}
                   />
                 ) : null
-              )}
+              )} */}
 
               {[...annotations, ...filteredPastAnnotations].map((ann) =>
                 ann.type === "polygon" && Array.isArray(ann.data?.points) ? (
