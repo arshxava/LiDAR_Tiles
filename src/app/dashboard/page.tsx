@@ -504,7 +504,7 @@ export default function DashboardPage() {
                         <>
                           <polygon
                             points={scaledPoints}
-                            fill="rgba(255, 0, 0, 0.3)"
+                            fill="none"                            
                             stroke="red"
                             strokeWidth={2}
                           />
@@ -523,7 +523,7 @@ export default function DashboardPage() {
                 ) : null
               )}
 
-              {drawingpolygon && polygonPoints.length > 1 && imageRef.current && (
+              {drawingpolygon && polygonPoints.length > 0 && imageRef.current && (
   <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">
     {(() => {
       const rect = imageRef.current.getBoundingClientRect();
@@ -534,21 +534,46 @@ export default function DashboardPage() {
       const offsetX = (rect.width - imageRef.current.naturalWidth * scale) / 2;
       const offsetY = (rect.height - imageRef.current.naturalHeight * scale) / 2;
 
-      const scaledPoints = polygonPoints
-        .map((p) => `${p.x * scale + offsetX},${p.y * scale + offsetY}`)
-        .join(" ");
+      const scaled = polygonPoints.map(p => ({
+        x: p.x * scale + offsetX,
+        y: p.y * scale + offsetY
+      }));
 
       return (
-        <polygon
-          points={scaledPoints}
-          fill="rgba(0,123,255,0.4)"
-          stroke="#007bff"
-          strokeWidth={2}
-        />
+        <>
+          {/* Draw small circle at first point */}
+          <circle
+            cx={scaled[0].x}
+            cy={scaled[0].y}
+            r={4}
+            fill="#007bff"
+            stroke="white"
+            strokeWidth={1}
+          />
+
+          {/* Draw lines between each point */}
+          {scaled.map((point, idx) => {
+            if (idx === 0) return null;
+            const prev = scaled[idx - 1];
+            return (
+              <line
+                key={idx}
+                x1={prev.x}
+                y1={prev.y}
+                x2={point.x}
+                y2={point.y}
+                stroke="#007bff"
+                strokeWidth={2}
+              />
+            );
+          })}
+        </>
       );
     })()}
   </svg>
 )}
+
+
             </div>
           ) : (
             <div className="h-[500px] flex items-center justify-center bg-gray-100 text-gray-600 border rounded shadow">
