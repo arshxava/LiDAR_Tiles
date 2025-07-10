@@ -37,9 +37,8 @@ export default function DashboardPage() {
 
   const [selectedTile, setSelectedTile] = useState<Tile | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  const [currentTool, setCurrentTool] = useState<"point" | "polygon" | null>(
-    null
-  );
+  // const [currentTool, setCurrentTool] = useState<"point" | "polygon" | null>(null);
+  const [currentTool, setCurrentTool] = useState<"polygon" | null>(null);
   const [isAnnotationDialogOpen, setIsAnnotationDialogOpen] = useState(false);
   const [currentAnnotationData, setCurrentAnnotationData] = useState<any>(null);
   const [currentAnnotationType, setCurrentAnnotationType] =
@@ -58,8 +57,8 @@ export default function DashboardPage() {
 
   const [newTileAssigned, setNewTileAssigned] = useState(false);
   const [loadingTile, setLoadingTile] = useState(true);
-  const [drawingPolygon, setDrawingPolygon] = useState(false);
-  const [polygonPoints, setPolygonPoints] = useState<
+  const [drawingpolygon, setDrawingpolygon] = useState(false);
+  const [polygonPoints, setpolygonPoints] = useState<
     { x: number; y: number }[]
   >([]);
 
@@ -195,8 +194,8 @@ export default function DashboardPage() {
   //   }
 
   //   if (currentTool === "polygon") {
-  //     setPolygonPoints((prev) => [...prev, { x, y }]);
-  //     setDrawingPolygon(true);
+  //     setpolygonPoints((prev) => [...prev, { x, y }]);
+  //     setDrawingpolygon(true);
   //   }
   // };
 
@@ -225,15 +224,15 @@ export default function DashboardPage() {
     const x = (e.clientX - rect.left - offsetX) / scale;
     const y = (e.clientY - rect.top - offsetY) / scale;
 
-    if (currentTool === "point") {
-      setCurrentAnnotationData({ pixelX: x, pixelY: y });
-      setCurrentAnnotationType("point");
-      setIsAnnotationDialogOpen(true);
-    }
+    // if (currentTool === "point") {
+    //   setCurrentAnnotationData({ pixelX: x, pixelY: y });
+    //   setCurrentAnnotationType("point");
+    //   setIsAnnotationDialogOpen(true);
+    // }
 
     if (currentTool === "polygon") {
-      setPolygonPoints((prev) => [...prev, { x, y }]);
-      setDrawingPolygon(true);
+      setpolygonPoints((prev) => [...prev, { x, y }]);
+      setDrawingpolygon(true);
     }
   };
 
@@ -272,8 +271,8 @@ export default function DashboardPage() {
       setAnnotationNotes("");
       setIsAnnotationDialogOpen(false);
       setCurrentTool(null);
-      setPolygonPoints([]);
-      setDrawingPolygon(false);
+      setpolygonPoints([]);
+      setDrawingpolygon(false);
       toast({ title: "Annotation saved ✅" });
 
       fetchUserStats(); // optional
@@ -438,7 +437,7 @@ export default function DashboardPage() {
                 onClick={handleImageClick}
               />
 
-              {[...annotations, ...filteredPastAnnotations].map((ann) =>
+              {/* {[...annotations, ...filteredPastAnnotations].map((ann) =>
                 ann.type === "point" ? (
                   <div
                     key={ann.id}
@@ -471,7 +470,7 @@ export default function DashboardPage() {
                     title={ann.label}
                   />
                 ) : null
-              )}
+              )} */}
 
               {[...annotations, ...filteredPastAnnotations].map((ann) =>
                 ann.type === "polygon" && Array.isArray(ann.data?.points) ? (
@@ -505,7 +504,7 @@ export default function DashboardPage() {
                         <>
                           <polygon
                             points={scaledPoints}
-                            fill="rgba(255, 0, 0, 0.3)"
+                            fill="none"                            
                             stroke="red"
                             strokeWidth={2}
                           />
@@ -524,7 +523,7 @@ export default function DashboardPage() {
                 ) : null
               )}
 
-              {drawingPolygon && polygonPoints.length > 1 && imageRef.current && (
+              {drawingpolygon && polygonPoints.length > 0 && imageRef.current && (
   <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">
     {(() => {
       const rect = imageRef.current.getBoundingClientRect();
@@ -535,21 +534,46 @@ export default function DashboardPage() {
       const offsetX = (rect.width - imageRef.current.naturalWidth * scale) / 2;
       const offsetY = (rect.height - imageRef.current.naturalHeight * scale) / 2;
 
-      const scaledPoints = polygonPoints
-        .map((p) => `${p.x * scale + offsetX},${p.y * scale + offsetY}`)
-        .join(" ");
+      const scaled = polygonPoints.map(p => ({
+        x: p.x * scale + offsetX,
+        y: p.y * scale + offsetY
+      }));
 
       return (
-        <polygon
-          points={scaledPoints}
-          fill="rgba(0,123,255,0.4)"
-          stroke="#007bff"
-          strokeWidth={2}
-        />
+        <>
+          {/* Draw small circle at first point */}
+          <circle
+            cx={scaled[0].x}
+            cy={scaled[0].y}
+            r={4}
+            fill="#007bff"
+            stroke="white"
+            strokeWidth={1}
+          />
+
+          {/* Draw lines between each point */}
+          {scaled.map((point, idx) => {
+            if (idx === 0) return null;
+            const prev = scaled[idx - 1];
+            return (
+              <line
+                key={idx}
+                x1={prev.x}
+                y1={prev.y}
+                x2={point.x}
+                y2={point.y}
+                stroke="#007bff"
+                strokeWidth={2}
+              />
+            );
+          })}
+        </>
       );
     })()}
   </svg>
 )}
+
+
             </div>
           ) : (
             <div className="h-[500px] flex items-center justify-center bg-gray-100 text-gray-600 border rounded shadow">
@@ -558,7 +582,7 @@ export default function DashboardPage() {
           )}
 
           {currentTool === "polygon" &&
-            drawingPolygon &&
+            drawingpolygon &&
             polygonPoints.length > 2 && (
               <Button
                 onClick={() => {
@@ -568,7 +592,7 @@ export default function DashboardPage() {
                 }}
                 className="mt-2"
               >
-                Complete Polygon
+                Complete Echo
               </Button>
             )}
 

@@ -1,84 +1,105 @@
 "use client";
 
-import React from "react";
-import { Badge } from "@/components/ui/badge";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserIcon, Loader2, CheckCircle, AlertTriangle } from "lucide-react";
-
-const statusIcons = {
-  available: <AlertTriangle className="text-yellow-500 w-4 h-4 mr-1" />,
-  in_progress: <Loader2 className="text-blue-500 w-4 h-4 mr-1 animate-spin" />,
-  completed: <CheckCircle className="text-green-500 w-4 h-4 mr-1" />,
-};
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function TileStatusGrid({ tiles }) {
-  if (!tiles?.length) return <p className="text-muted">No tiles to display.</p>;
+  const [selectedTile, setSelectedTile] = useState(null);
+
+  const getFullUrl = (url) =>
+    url?.startsWith("http") ? url : `http://localhost:5000${url}`;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-      {tiles.map((tile, idx) => (
-        <Card key={tile._id || idx}>
-          <CardHeader>
-            <CardTitle className="text-sm">
-              Tile ID:{" "}
-              <span className="text-muted-foreground">
-                {tile._id ? tile._id.slice(-5) : "N/A"}
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xs text-muted-foreground">
-              {/* Tile Image */}
-              {tile.imageUrl ? (
-                <img
-                  src={tile.imageUrl}
-                  alt={`Tile ${tile._id}`}
-                  className="w-full h-32 object-cover rounded mb-2 border"
-                />
-              ) : (
-                <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 text-sm rounded mb-2 border">
-                  No Image
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+      {tiles.map((tile, idx) => {
+        const isCompleted = tile.status === "completed" && tile.annotations?.length > 0;
+        const imageUrl =
+          isCompleted && tile.annotatedImageUrl
+            ? getFullUrl(tile.annotatedImageUrl)
+            : getFullUrl(tile.imageUrl);
+
+        return (
+          <Card
+            key={idx}
+            onClick={() => setSelectedTile(tile)}
+            className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
+          >
+            <CardHeader>
+              <CardTitle>{tile.name || `Tile ${idx + 1}`}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <img
+                src={imageUrl}
+                alt={`Tile ${idx + 1}`}
+                className="w-full h-40 object-cover rounded"
+              />
+              <p>
+                <strong>Status:</strong> {tile.status}
+              </p>
+              <p>
+                <strong>Assigned To:</strong> {tile.assignedTo?.username || "Unknown"}
+              </p>
+
+              {isCompleted && tile.annotations?.length > 0 && (
+                <div className="mt-2 text-xs">
+                  <strong>Annotations:</strong>
+                  <ul className="list-disc list-inside mt-1 space-y-1">
+                    {tile.annotations.map((ann, i) => (
+                      <li key={i}>
+                        <strong>{ann.label}</strong>: {ann.notes || "No notes"}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        );
+      })}
 
-              {/* Bounds Info */}
-              <div>
-                <strong>Bounds:</strong>
-                {Array.isArray(tile.bounds) && tile.bounds.length === 4 ? (
-                  <div className="text-xs mt-1">
-                    <div>
-                      Lat: {tile.bounds[1].toFixed(4)} -{" "}
-                      {tile.bounds[3].toFixed(4)}
-                    </div>
-                    <div>
-                      Lng: {tile.bounds[0].toFixed(4)} -{" "}
-                      {tile.bounds[2].toFixed(4)}
-                    </div>
+      {/* Dialog for selected tile */}
+      <Dialog open={!!selectedTile} onOpenChange={() => setSelectedTile(null)}>
+        <DialogContent className="max-w-xl">
+          {selectedTile && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selectedTile.name || "Tile Details"}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <img
+                  src={
+                    selectedTile.status === "completed" && selectedTile.annotatedImageUrl
+                      ? getFullUrl(selectedTile.annotatedImageUrl)
+                      : getFullUrl(selectedTile.imageUrl)
+                  }
+                  alt="Selected Tile"
+                  className="w-full h-auto rounded border"
+                />
+                <p>
+                  <strong>Status:</strong> {selectedTile.status}
+                </p>
+                <p>
+                  <strong>Assigned To:</strong>{" "}
+                  {selectedTile.assignedTo?.username || "Unknown"}
+                </p>
+                {selectedTile.annotations?.length > 0 && (
+                  <div className="text-sm">
+                    <strong>Annotations:</strong>
+                    <ul className="list-disc list-inside mt-2 space-y-1">
+                      {selectedTile.annotations.map((ann, i) => (
+                        <li key={i}>
+                          <strong>{ann.label}</strong>: {ann.notes || "No notes"}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                ) : (
-                  <div className="text-red-400 text-xs">Invalid bounds</div>
                 )}
               </div>
-
-              {/* Status */}
-              <div className="mt-2 flex items-center text-xs">
-                {statusIcons[tile.status] || null}
-                <Badge variant="outline" className="ml-1">
-                  {tile.status}
-                </Badge>
-              </div>
-
-              {/* Assigned To */}
-              {tile.assignedTo && (
-                <div className="flex items-center mt-1 text-primary text-xs">
-                  <UserIcon className="w-3 h-3 mr-1" />
-                  Assigned to: {tile.assignedTo.name || tile.assignedTo.email}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

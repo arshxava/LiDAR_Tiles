@@ -23,6 +23,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import type { Role } from "@/types";
 import { MountainSnow } from "lucide-react";
+
+import { registerToWordPress } from '../../../src/api/wordpress'
  
 const formSchema = z.object({
   username: z.string().min(3, { message: "Username must be at least 3 characters." }),
@@ -58,6 +60,12 @@ const router = useRouter();
       email: values.email,
       password: values.password,
       role: values.role,
+    });
+ 
+    await registerToWordPress({
+      username: values.username,
+      email: values.email,
+      password: values.password,
     });
  
  
