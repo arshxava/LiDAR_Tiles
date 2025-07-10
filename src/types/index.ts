@@ -20,7 +20,8 @@ export interface Tile {
   center: { lat: number; lng: number }; // For map display
   zoom: number;
 }
-
+// polygon-polygon
+// export type AnnotationType = 'polygon' | 'label' | 'note';
 export type AnnotationType = 'point' | 'polygon' | 'label' | 'note';
 
 export interface Annotation {

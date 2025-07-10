@@ -57,8 +57,8 @@ export default function DashboardPage() {
 
   const [newTileAssigned, setNewTileAssigned] = useState(false);
   const [loadingTile, setLoadingTile] = useState(true);
-  const [drawingPolygon, setDrawingPolygon] = useState(false);
-  const [polygonPoints, setPolygonPoints] = useState<
+  const [drawingpolygon, setDrawingpolygon] = useState(false);
+  const [polygonPoints, setpolygonPoints] = useState<
     { x: number; y: number }[]
   >([]);
 
@@ -194,8 +194,8 @@ export default function DashboardPage() {
   //   }
 
   //   if (currentTool === "polygon") {
-  //     setPolygonPoints((prev) => [...prev, { x, y }]);
-  //     setDrawingPolygon(true);
+  //     setpolygonPoints((prev) => [...prev, { x, y }]);
+  //     setDrawingpolygon(true);
   //   }
   // };
 
@@ -231,8 +231,8 @@ export default function DashboardPage() {
     // }
 
     if (currentTool === "polygon") {
-      setPolygonPoints((prev) => [...prev, { x, y }]);
-      setDrawingPolygon(true);
+      setpolygonPoints((prev) => [...prev, { x, y }]);
+      setDrawingpolygon(true);
     }
   };
 
@@ -271,8 +271,8 @@ export default function DashboardPage() {
       setAnnotationNotes("");
       setIsAnnotationDialogOpen(false);
       setCurrentTool(null);
-      setPolygonPoints([]);
-      setDrawingPolygon(false);
+      setpolygonPoints([]);
+      setDrawingpolygon(false);
       toast({ title: "Annotation saved ✅" });
 
       fetchUserStats(); // optional
@@ -523,7 +523,7 @@ export default function DashboardPage() {
                 ) : null
               )}
 
-              {drawingPolygon && polygonPoints.length > 1 && imageRef.current && (
+              {drawingpolygon && polygonPoints.length > 1 && imageRef.current && (
   <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">
     {(() => {
       const rect = imageRef.current.getBoundingClientRect();
@@ -557,7 +557,7 @@ export default function DashboardPage() {
           )}
 
           {currentTool === "polygon" &&
-            drawingPolygon &&
+            drawingpolygon &&
             polygonPoints.length > 2 && (
               <Button
                 onClick={() => {
@@ -567,7 +567,7 @@ export default function DashboardPage() {
                 }}
                 className="mt-2"
               >
-                Complete Polygon
+                Complete Echo
               </Button>
             )}
 

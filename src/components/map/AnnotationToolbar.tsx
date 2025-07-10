@@ -19,14 +19,14 @@ interface AnnotationToolbarProps {
   // currentTool: "point" | "polygon" | null;
   currentTool:  "polygon" | null;
   // onToolSelect: (tool: "point" | "polygon" | null) => void;
-  onToolSelect: ( "polygon" | null);
+  onToolSelect: ( "Echo" | null);
   onClearAnnotations?: () => void;
 }
 
 const tools = [
   { id: "cursor", name: "Select", icon: MousePointer2, tool: null },
   // { id: "point", name: "Point", icon: MapPin, tool: "point" },
-  { id: "polygon", name: "Polygon", icon: DraftingCompass, tool: "polygon" },
+  { id: "polygon", name: "Echo", icon: DraftingCompass, tool: "polygon" },
 ];
 
 export default function AnnotationToolbar({

@@ -13,7 +13,8 @@ interface MapViewProps {
   annotations: Annotation[];
   onTileSelect: (tile: Tile) => void;
   selectedTile: Tile | null;
-  drawingMode: 'point' | 'polygon' | null;
+  // drawingMode: 'point' | 'polygon' | null;
+  drawingMode:  'polygon' | null;
   onMapClick: (event: google.maps.MapMouseEvent) => void;
   onAnnotationComplete: (annotationData: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
   aiSuggestedGeoJson: string | null; // GeoJSON string from AI
@@ -24,8 +25,8 @@ const DEFAULT_ZOOM = 10;
 
 const DrawingManagerComponent: React.FC<{
   drawingMode: 'point' | 'polygon' | null;
-  onPolygonComplete: (polygon: google.maps.Polygon) => void;
-}> = ({ drawingMode, onPolygonComplete }) => {
+  onpolygonComplete: (polygon: google.maps.polygon) => void;
+}> = ({ drawingMode, onpolygonComplete }) => {
   const map = useMap();
   const maps = useMapsLibrary('drawing');
   const [drawingManager, setDrawingManager] = useState<google.maps.drawing.DrawingManager | null>(null);
@@ -50,20 +51,20 @@ const DrawingManagerComponent: React.FC<{
     });
     setDrawingManager(newDrawingManager);
 
-    google.maps.event.addListener(newDrawingManager, 'polygoncomplete', (polygon: google.maps.Polygon) => {
-      onPolygonComplete(polygon);
+    google.maps.event.addListener(newDrawingManager, 'polygoncomplete', (polygon: google.maps.polygon) => {
+      onpolygonComplete(polygon);
       newDrawingManager.setDrawingMode(null); // Exit drawing mode
     });
     
     return () => {
       newDrawingManager.setMap(null);
     };
-  }, [map, maps, onPolygonComplete]);
+  }, [map, maps, onpolygonComplete]);
 
   useEffect(() => {
     if (drawingManager) {
       if (drawingMode === 'polygon') {
-        drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+        drawingManager.setDrawingMode(google.maps.drawing.OverlayType.polygon);
       } else {
         drawingManager.setDrawingMode(null);
       }
@@ -128,7 +129,7 @@ export default function MapView({
     setMapReady(true);
   }, []);
   
-  const handlePolygonComplete = (polygon: google.maps.Polygon) => {
+  const handlepolygonComplete = (polygon: google.maps.polygon) => {
     const path = polygon.getPath().getArray().map(latLng => ({ lat: latLng.lat(), lng: latLng.lng() }));
     onAnnotationComplete({ type: 'polygon', coordinates: path });
     polygon.setMap(null); // Remove the drawn polygon, parent will handle rendering
@@ -195,7 +196,7 @@ export default function MapView({
                 </AdvancedMarker>
               );
             }
-            // TODO: Render polygons (data layer or Polygon component)
+            // TODO: Render polygons (data layer or polygon component)
             // For now, polygons are drawn by DrawingManager and AI suggestions layer
             return null;
           })}
@@ -214,7 +215,7 @@ export default function MapView({
             </InfoWindow>
           )}
 
-          <DrawingManagerComponent drawingMode={drawingMode} onPolygonComplete={handlePolygonComplete} />
+          <DrawingManagerComponent drawingMode={drawingMode} onpolygonComplete={handlepolygonComplete} />
           <AISuggestionsLayer geoJsonString={aiSuggestedGeoJson} />
 
         </Map>
