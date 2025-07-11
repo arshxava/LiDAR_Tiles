@@ -26,6 +26,7 @@ export default function MapUploadForm() {
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 const token = localStorage.getItem("lidarToken");
+   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL || http://localhost:5000
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -71,7 +72,7 @@ const token = localStorage.getItem("lidarToken");
   setIsUploading(true);
   // console.log("token",token)
   try {
-    const res = await fetch("http://localhost:5000/api/maps/upload", {
+    const res = await fetch(`${baseUrl}/api/maps/upload`, {
       method: "POST",
       body: formData,
       headers: {

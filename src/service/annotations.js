@@ -1,24 +1,12 @@
 import axios from "axios";
  
-// export const saveAnnotationToDB = async (annotation) => {
-//     const token = localStorage.getItem("lidarToken");
-//     const res = await axios.post(
-//         "http://localhost:5000/api/annotations",
-//         annotation,
-//         {
-//             headers: {
-//                 Authorization: `Bearer ${token}`,
-//             },
-//         }
-//     );
-//     return res.data;
-// };
+
 
 
 export const saveAnnotationToDB = async (annotation) => {
   const token = localStorage.getItem("lidarToken");
-
-  const res = await fetch("http://localhost:5000/api/annotations", {
+ const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL || http://localhost:5000
+  const res = await fetch(`${baseUrl}/api/annotations`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -7,12 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function UploadedMapsModal({ onClose, onSelectMap }) {
   const [maps, setMaps] = useState([]);
+   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL || http://localhost:5000
+
 
  useEffect(() => {
   const fetchMaps = async () => {
     try {
       const token = localStorage.getItem("lidarToken");
-      const res = await axios.get("http://localhost:5000/api/maps", {
+      const res = await axios.get(`${baseUrl}/api/maps`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

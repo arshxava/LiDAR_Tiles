@@ -43,6 +43,7 @@ export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL || http://localhost:5000
 
   const [selectedTile, setSelectedTile] = useState<Tile | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
@@ -108,7 +109,7 @@ export default function DashboardPage() {
         fetchAssignedTile();
       } else {
         if (savedTile.imageUrl?.startsWith("/uploads")) {
-          savedTile.imageUrl = `http://localhost:5000${savedTile.imageUrl}`;
+          savedTile.imageUrl = `${baseUrl}${savedTile.imageUrl}`;
         }
 
         setSelectedTile(savedTile);
@@ -160,7 +161,7 @@ export default function DashboardPage() {
       if (tile?._id) tile.id = tile._id;
 
       if (tile?.imageUrl?.startsWith("/uploads")) {
-        tile.imageUrl = `http://localhost:5000${tile.imageUrl}`;
+        tile.imageUrl = `${baseUrl}${tile.imageUrl}`;
       }
 
       setSelectedTile(tile);
@@ -307,7 +308,7 @@ export default function DashboardPage() {
 
       // ✅ Send skip request to backend
       const res = await fetch(
-        `http://localhost:5000/api/tiles/skip/${selectedTile.id}`,
+        `${baseUrl}/api/tiles/skip/${selectedTile.id}`,
         {
           method: "POST",
           headers: {

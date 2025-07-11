@@ -23,6 +23,8 @@ export default function AdminDashboardPage() {
   const [latestMap, setLatestMap] = useState<any>(null);
   const [showMapModal, setShowMapModal] = useState(false);
 const [statusFilter, setStatusFilter] = useState<string>("all");
+   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL || http://localhost:5000
+
 const filteredTiles = statusFilter === "all"
   ? tiles
   : tiles.filter((tile) => tile.status === statusFilter);
@@ -39,7 +41,7 @@ const filteredTiles = statusFilter === "all"
     setTileLoading(true);
     const token = localStorage.getItem("lidarToken");
 
-    const mapsRes = await axios.get("http://localhost:5000/api/maps", {
+    const mapsRes = await axios.get(`${baseUrl}/api/maps`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -57,7 +59,7 @@ const filteredTiles = statusFilter === "all"
     setLatestMap(latest);
 
     const tileRes = await axios.get(
-      `http://localhost:5000/api/maps/${latest._id}/tiles`,
+      `${baseUrl}/api/maps/${latest._id}/tiles`,
       {
         headers: {
           Authorization: `Bearer ${token}`,

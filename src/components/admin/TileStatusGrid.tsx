@@ -7,9 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 export default function TileStatusGrid({ tiles }) {
   const [selectedTile, setSelectedTile] = useState(null);
+   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL || http://localhost:5000
 
   const getFullUrl = (url) =>
-    url?.startsWith("http") ? url : `http://localhost:5000${url}`;
+    url?.startsWith("http") ? url : `${baseUrl}${url}`;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">

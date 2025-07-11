@@ -19,7 +19,7 @@ export default function TileOverlayViewer({ mapUrl, tiles }: Props) {
   const [selectedTile, setSelectedTile] = useState<Tile | null>(null);
   const [zoom, setZoom] = useState(1);
   const [origin, setOrigin] = useState("center");
- 
+   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL || http://localhost:5000
   const CANVAS_W = 1000;
   const CANVAS_H = 1000;
  
@@ -31,7 +31,7 @@ export default function TileOverlayViewer({ mapUrl, tiles }: Props) {
   const maxLng = Math.max(...tiles.map((t) => t.bounds[3]));
  
   const getFullUrl = (url: string) =>
-    url?.startsWith("http") ? url : `http://localhost:5000${url}`;
+    url?.startsWith("http") ? url : `${baseUrl}${url}`;
  
   const loadImage = (src: string): Promise<HTMLImageElement> =>
     new Promise((resolve, reject) => {
