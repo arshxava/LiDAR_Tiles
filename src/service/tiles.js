@@ -19,14 +19,13 @@ export const getAssignedTile = async () => {
   return res.data;
 };
 
-
-export const submitTile = async ({ tileId, annotations }) => {
+export const submitTile = async ({ tileId, annotationIds, submittedBy,annotationMeta }) => {
   const token = localStorage.getItem("lidarToken");
   if (!token) throw new Error("No token found");
-
+ 
   const res = await api.post(
     `/tiles/complete/${tileId}`,
-    { annotations }, 
+     { annotationIds, submittedBy, annotationMeta },
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -35,3 +34,5 @@ export const submitTile = async ({ tileId, annotations }) => {
   );
   return res.data;
 };
+ 
+ 

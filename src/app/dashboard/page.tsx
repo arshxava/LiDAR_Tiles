@@ -30,6 +30,15 @@ import { getAssignedTile, submitTile } from "../../service/tiles";
 import { getUserAnnotations, getLeaderboard } from "../../service/user";
 import { saveAnnotationToDB } from "../../service/annotations";
 
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+
+
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -44,6 +53,7 @@ export default function DashboardPage() {
   const [currentAnnotationType, setCurrentAnnotationType] =
     useState<AnnotationType | null>(null);
   const [annotationLabel, setAnnotationLabel] = useState("");
+  const [annotationPeriod, setAnnotationPeriod] = useState("");
   const [annotationNotes, setAnnotationNotes] = useState("");
   const [skipCount, setSkipCount] = useState(0);
   const MAX_SKIP = 3;
@@ -252,6 +262,7 @@ export default function DashboardPage() {
       data: currentAnnotationData,
       label: annotationLabel,
       notes: annotationNotes,
+      period: annotationPeriod, // ✅ Include period
       createdAt: new Date().toISOString(),
     };
 
@@ -259,23 +270,16 @@ export default function DashboardPage() {
       const savedAnn = await saveAnnotationToDB(newAnn);
       setAnnotations((prev) => [...prev, savedAnn]);
 
-      console.log("✅ Saved annotation:", savedAnn); // 🔍 Add this line
-
-      if (!savedAnn || !savedAnn.type || !savedAnn.data) {
-        console.error("❌ Invalid saved annotation:", savedAnn);
-        return;
-      }
-
-      setAnnotations((prev) => [...prev, savedAnn]); // ✅ Append valid saved annotation
       setAnnotationLabel("");
       setAnnotationNotes("");
+      setAnnotationPeriod(""); // ✅ Reset period
       setIsAnnotationDialogOpen(false);
       setCurrentTool(null);
       setpolygonPoints([]);
       setDrawingpolygon(false);
       toast({ title: "Annotation saved ✅" });
 
-      fetchUserStats(); // optional
+      fetchUserStats();
     } catch (err) {
       console.error("❌ Annotation save failed:", err);
       toast({ variant: "destructive", title: "Failed to save annotation" });
@@ -349,68 +353,84 @@ export default function DashboardPage() {
       </div>
     );
   }
-  //   const completeTile = async () => {
-  //   if (!selectedTile || annotations.length === 0) {
-  //     toast({
-  //       variant: "destructive",
-  //       title: "No annotations to submit",
-  //     });
-  //     return;
-  //   }
 
-  //   try {
-  //     await submitTile({
-  //       tileId: selectedTile.id,
-  //       annotations,
-  //     });
+   const completeTile = async () => {
+  console.log("🔍 Starting completeTile function...");
+ 
+  const validAnnotations = annotations.filter((a) => a && a.type && a.data);
+  console.log("✅ Valid annotations:", validAnnotations);
+ 
+  if (!selectedTile) {
+    console.log("⛔ No selected tile.");
+    toast({
+      variant: "destructive",
+      title: "No tile selected",
+    });
+    return;
+  }
+ 
+  if (validAnnotations.length === 0) {
+    console.log("⛔ No valid annotations to submit.");
+    toast({
+      variant: "destructive",
+      title: "No annotations to submit",
+    });
+    return;
+  }
+ 
+  if (!user?.id) {
+    console.log("⛔ No user logged in.");
+    toast({
+      variant: "destructive",
+      title: "User information missing",
+    });
+    return;
+  }
+ 
+  try {
+    console.log("📦 Submitting annotations:", {
+      tileId: selectedTile.id,
+      annotations,
+      submittedBy: user.id,  // ✅ added user ID
+    });
+ 
+   await submitTile({
+  tileId: selectedTile.id,
+  annotationIds: annotations.map((a) => a._id),
+  submittedBy: user.id,
+  annotationMeta: annotations.reduce((acc, a) => {
+    acc[a._id] = {
+      label: a.label,
+      period: a.period,
+      notes: a.notes,
+    };
+    return acc;
+  }, {} as Record<string, { label: string; period: string; notes: string }>),
+});
 
-  //     toast({ title: "Tile submitted successfully ✅" });
-
-  //     // Clear local data and fetch a new tile
-  //     setAnnotations([]);
-  //     localStorage.removeItem("currentTile");
-  //     localStorage.removeItem("currentAnnotations");
-  //     await fetchAssignedTile();
-  //   } catch (err) {
-  //     // console.error("Tile submission failed:", err);
-  //     toast({
-  //       variant: "destructive",
-  //       title: "Failed to submit tile",
-  //     });
-  //   }
-  // };
-
-  const completeTile = async () => {
-    const validAnnotations = annotations.filter((a) => a && a.type && a.data);
-
-    if (!selectedTile || validAnnotations.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "No annotations to submit",
-      });
-      return;
-    }
-
-    try {
-      console.log("📦 Submitting annotations:", annotations);
-      await submitTile({
-        tileId: selectedTile.id,
-        annotations,
-      });
-
-      toast({ title: "Tile submitted successfully ✅" });
-
-      setAnnotations([]);
-      localStorage.removeItem("currentTile");
-      localStorage.removeItem("currentAnnotations");
-      await fetchAssignedTile();
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Failed to submit tile",
-      });
-    }
-  };
+ 
+    console.log("✅ Tile submitted successfully");
+ 
+    toast({ title: "Tile submitted successfully ✅" });
+ 
+    console.log("🧹 Clearing annotations and local storage...");
+    setAnnotations([]);
+    localStorage.removeItem("currentTile");
+    localStorage.removeItem("currentAnnotations");
+ 
+    console.log("🔄 Fetching next assigned tile...");
+    await fetchAssignedTile();
+ 
+    console.log("🎉 Tile submission process completed.");
+  } catch (err) {
+    console.error("❌ Failed to submit tile:", err);
+    toast({
+      variant: "destructive",
+      title: "Failed to submit tile",
+    });
+  }
+};
+ 
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -683,13 +703,53 @@ export default function DashboardPage() {
             <DialogTitle>Add Annotation</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+
+            {/* ✅ Label Dropdown */}
             <div>
-              <Label>Label</Label>
-              <Input
-                value={annotationLabel}
-                onChange={(e) => setAnnotationLabel(e.target.value)}
-              />
+              <Label>Echo</Label>
+              <Select value={annotationLabel} onValueChange={setAnnotationLabel}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select label" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Road">Road</SelectItem>
+                  <SelectItem value="Burial mound">Burial mound</SelectItem>
+                  <SelectItem value="Earth wall">Earth wall</SelectItem>
+                  <SelectItem value="Stone wall">Stone wall</SelectItem>
+                  <SelectItem value="Depression">Depression</SelectItem>
+                  <SelectItem value="Erosion ditch">Erosion ditch</SelectItem>
+                  <SelectItem value="Charcoal Meier">Charcoal Meier</SelectItem>
+                  <SelectItem value="Water infrastructure">Water infrastructure</SelectItem>
+                  <SelectItem value="No idea">No idea</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+
+              {/* ✅ Period Dropdown */}
+            <div>
+              <Label>What period do you think the structure belongs to?</Label>
+              <Select
+                value={annotationPeriod}
+                onValueChange={setAnnotationPeriod}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Neolithic or before">
+                    Neolithic or before
+                  </SelectItem>
+                  <SelectItem value="Bronze Age">Bronze Age</SelectItem>
+                  <SelectItem value="Iron Age">Iron Age</SelectItem>
+                  <SelectItem value="Roman">Roman</SelectItem>
+                  <SelectItem value="Medieval">Medieval</SelectItem>
+                  <SelectItem value="Modern">Modern</SelectItem>
+                  <SelectItem value="No idea">No idea</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Notes */}
             <div>
               <Label>Notes</Label>
               <Textarea
@@ -697,7 +757,9 @@ export default function DashboardPage() {
                 onChange={(e) => setAnnotationNotes(e.target.value)}
               />
             </div>
+
           </div>
+
           <DialogFooter>
             <Button
               variant="outline"
