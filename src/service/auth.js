@@ -8,6 +8,6 @@ export const register = async (formData) => {
 
 export const login = async (credentials) => {
   const res = await api.post('/auth/login', credentials);
-  console.log("API Response:", res.data);
+  // console.log("API Response:", res.data);
   return res.data; // will contain token and user
 };

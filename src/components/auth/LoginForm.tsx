@@ -46,7 +46,7 @@ export default function LoginForm() {
         email: values.email,
         password: values.password,
       });
-console.log("Logged in user:", res.user.username); // ✅ Should log "rohanxava"
+// console.log("Logged in user:", res.user.username); // ✅ Should log "rohanxava"
  
       setUser(res.user);
       setToken(res.token);

@@ -353,15 +353,14 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-   const completeTile = async () => {
-  console.log("🔍 Starting completeTile function...");
+ const completeTile = async () => {
+  // console.log("🔍 Starting completeTile function...");
  
   const validAnnotations = annotations.filter((a) => a && a.type && a.data);
-  console.log("✅ Valid annotations:", validAnnotations);
+  // console.log("✅ Valid annotations:", validAnnotations);
  
   if (!selectedTile) {
-    console.log("⛔ No selected tile.");
+    // console.log("⛔ No selected tile.");
     toast({
       variant: "destructive",
       title: "No tile selected",
@@ -370,7 +369,7 @@ export default function DashboardPage() {
   }
  
   if (validAnnotations.length === 0) {
-    console.log("⛔ No valid annotations to submit.");
+    // console.log("⛔ No valid annotations to submit.");
     toast({
       variant: "destructive",
       title: "No annotations to submit",
@@ -379,7 +378,7 @@ export default function DashboardPage() {
   }
  
   if (!user?.id) {
-    console.log("⛔ No user logged in.");
+    // console.log("⛔ No user logged in.");
     toast({
       variant: "destructive",
       title: "User information missing",
@@ -388,7 +387,7 @@ export default function DashboardPage() {
   }
  
   try {
-    console.log("📦 Submitting annotations:", {
+    // console.log("📦 Submitting annotations:", {
       tileId: selectedTile.id,
       annotations,
       submittedBy: user.id,  // ✅ added user ID
@@ -396,34 +395,25 @@ export default function DashboardPage() {
  
    await submitTile({
   tileId: selectedTile.id,
-  annotationIds: annotations.map((a) => a._id),
+  annotationIds: annotations.map((a) => a._id),  // ✅ Only send the IDs
   submittedBy: user.id,
-  annotationMeta: annotations.reduce((acc, a) => {
-    acc[a._id] = {
-      label: a.label,
-      period: a.period,
-      notes: a.notes,
-    };
-    return acc;
-  }, {} as Record<string, { label: string; period: string; notes: string }>),
 });
-
  
-    console.log("✅ Tile submitted successfully");
+    // console.log("✅ Tile submitted successfully");
  
     toast({ title: "Tile submitted successfully ✅" });
  
-    console.log("🧹 Clearing annotations and local storage...");
+    // console.log("🧹 Clearing annotations and local storage...");
     setAnnotations([]);
     localStorage.removeItem("currentTile");
     localStorage.removeItem("currentAnnotations");
  
-    console.log("🔄 Fetching next assigned tile...");
+    // console.log("🔄 Fetching next assigned tile...");
     await fetchAssignedTile();
  
-    console.log("🎉 Tile submission process completed.");
+    // console.log("🎉 Tile submission process completed.");
   } catch (err) {
-    console.error("❌ Failed to submit tile:", err);
+    // console.error("❌ Failed to submit tile:", err);
     toast({
       variant: "destructive",
       title: "Failed to submit tile",
@@ -431,6 +421,7 @@ export default function DashboardPage() {
   }
 };
  
+
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -524,7 +515,7 @@ export default function DashboardPage() {
                         <>
                           <polygon
                             points={scaledPoints}
-                            fill="none"                            
+                            fill="none"
                             stroke="red"
                             strokeWidth={2}
                           />
@@ -544,56 +535,54 @@ export default function DashboardPage() {
               )}
 
               {drawingpolygon && polygonPoints.length > 0 && imageRef.current && (
-  <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">
-    {(() => {
-      const rect = imageRef.current.getBoundingClientRect();
-      const scale = Math.min(
-        rect.width / imageRef.current.naturalWidth,
-        rect.height / imageRef.current.naturalHeight
-      );
-      const offsetX = (rect.width - imageRef.current.naturalWidth * scale) / 2;
-      const offsetY = (rect.height - imageRef.current.naturalHeight * scale) / 2;
+                <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">
+                  {(() => {
+                    const rect = imageRef.current.getBoundingClientRect();
+                    const scale = Math.min(
+                      rect.width / imageRef.current.naturalWidth,
+                      rect.height / imageRef.current.naturalHeight
+                    );
+                    const offsetX = (rect.width - imageRef.current.naturalWidth * scale) / 2;
+                    const offsetY = (rect.height - imageRef.current.naturalHeight * scale) / 2;
 
-      const scaled = polygonPoints.map(p => ({
-        x: p.x * scale + offsetX,
-        y: p.y * scale + offsetY
-      }));
+                    const scaled = polygonPoints.map(p => ({
+                      x: p.x * scale + offsetX,
+                      y: p.y * scale + offsetY
+                    }));
 
-      return (
-        <>
-          {/* Draw small circle at first point */}
-          <circle
-            cx={scaled[0].x}
-            cy={scaled[0].y}
-            r={4}
-            fill="#007bff"
-            stroke="white"
-            strokeWidth={1}
-          />
+                    return (
+                      <>
+                        {/* Draw small circle at first point */}
+                        <circle
+                          cx={scaled[0].x}
+                          cy={scaled[0].y}
+                          r={4}
+                          fill="#007bff"
+                          stroke="white"
+                          strokeWidth={1}
+                        />
 
-          {/* Draw lines between each point */}
-          {scaled.map((point, idx) => {
-            if (idx === 0) return null;
-            const prev = scaled[idx - 1];
-            return (
-              <line
-                key={idx}
-                x1={prev.x}
-                y1={prev.y}
-                x2={point.x}
-                y2={point.y}
-                stroke="#007bff"
-                strokeWidth={2}
-              />
-            );
-          })}
-        </>
-      );
-    })()}
-  </svg>
-)}
-
-
+                        {/* Draw lines between each point */}
+                        {scaled.map((point, idx) => {
+                          if (idx === 0) return null;
+                          const prev = scaled[idx - 1];
+                          return (
+                            <line
+                              key={idx}
+                              x1={prev.x}
+                              y1={prev.y}
+                              x2={point.x}
+                              y2={point.y}
+                              stroke="#007bff"
+                              strokeWidth={2}
+                            />
+                          );
+                        })}
+                      </>
+                    );
+                  })()}
+                </svg>
+              )}
             </div>
           ) : (
             <div className="h-[500px] flex items-center justify-center bg-gray-100 text-gray-600 border rounded shadow">
@@ -601,20 +590,31 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {currentTool === "polygon" &&
-            drawingpolygon &&
-            polygonPoints.length > 2 && (
+          {currentTool === "polygon" && drawingpolygon && polygonPoints.length > 0 && (
+            <div className="flex gap-2 mt-2">
               <Button
                 onClick={() => {
-                  setCurrentAnnotationData({ points: polygonPoints });
-                  setCurrentAnnotationType("polygon");
-                  setIsAnnotationDialogOpen(true);
+                  setpolygonPoints((prev) => prev.slice(0, -1));
                 }}
-                className="mt-2"
+                variant="secondary"
               >
-                Complete Echo
+                Undo Last Point
               </Button>
-            )}
+
+              {polygonPoints.length > 2 && (
+                <Button
+                  onClick={() => {
+                    setCurrentAnnotationData({ points: polygonPoints });
+                    setCurrentAnnotationType("polygon");
+                    setIsAnnotationDialogOpen(true);
+                  }}
+                >
+                  Complete Echo
+                </Button>
+              )}
+            </div>
+          )}
+
 
           <div className="flex space-x-4 mt-4">
             <Button onClick={completeTile} disabled={loadingTile}>
@@ -725,7 +725,7 @@ export default function DashboardPage() {
               </Select>
             </div>
 
-              {/* ✅ Period Dropdown */}
+            {/* ✅ Period Dropdown */}
             <div>
               <Label>What period do you think the structure belongs to?</Label>
               <Select

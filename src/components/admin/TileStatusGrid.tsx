@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from "react";
@@ -19,9 +20,16 @@ export default function TileStatusGrid({ tiles }) {
             ? getFullUrl(tile.annotatedImageUrl)
             : getFullUrl(tile.imageUrl);
 
+        // ✅ Log only completed tiles to check populated data
+        if (isCompleted) {
+          // console.log(`✅ Completed Tile ${idx + 1}:`, tile);
+          // console.log("👤 Assigned User:", tile.assignedTo);
+          // console.log("📝 Annotations:", tile.annotations);
+        }
+
         return (
           <Card
-            key={idx}
+            key={tile._id}
             onClick={() => setSelectedTile(tile)}
             className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
           >
@@ -38,7 +46,7 @@ export default function TileStatusGrid({ tiles }) {
                 <strong>Status:</strong> {tile.status}
               </p>
               <p>
-                <strong>Assigned To:</strong> {tile.assignedTo?.username || "Unknown"}
+                <strong>Completed By:</strong> {tile.assignedTo?.username || "Unknown"}
               </p>
 
               {isCompleted && tile.annotations?.length > 0 && (
@@ -46,8 +54,9 @@ export default function TileStatusGrid({ tiles }) {
                   <strong>Annotations:</strong>
                   <ul className="list-disc list-inside mt-1 space-y-1">
                     {tile.annotations.map((ann, i) => (
-                      <li key={i}>
-                        <strong>{ann.label}</strong>: {ann.notes || "No notes"}
+                      <li key={ann._id || i}>
+                        <strong>{ann.label || "No Label"} - {ann.period || "No Period"}</strong>
+                        {ann.notes ? `: ${ann.notes}` : ": No notes"}
                       </li>
                     ))}
                   </ul>
@@ -58,7 +67,6 @@ export default function TileStatusGrid({ tiles }) {
         );
       })}
 
-      {/* Dialog for selected tile */}
       <Dialog open={!!selectedTile} onOpenChange={() => setSelectedTile(null)}>
         <DialogContent className="max-w-xl">
           {selectedTile && (
@@ -80,16 +88,16 @@ export default function TileStatusGrid({ tiles }) {
                   <strong>Status:</strong> {selectedTile.status}
                 </p>
                 <p>
-                  <strong>Assigned To:</strong>{" "}
-                  {selectedTile.assignedTo?.username || "Unknown"}
+                  <strong>Completed By:</strong> {selectedTile.assignedTo?.username || "Unknown"}
                 </p>
+
                 {selectedTile.annotations?.length > 0 && (
                   <div className="text-sm">
                     <strong>Annotations:</strong>
                     <ul className="list-disc list-inside mt-2 space-y-1">
                       {selectedTile.annotations.map((ann, i) => (
-                        <li key={i}>
-                          <strong>{ann.label}</strong>: {ann.notes || "No notes"}
+                        <li key={ann._id || i}>
+                          <strong>{ann.label || "No Label"}</strong> ({ann.period || "No Period"}): {ann.notes || "No notes"}
                         </li>
                       ))}
                     </ul>

@@ -69,7 +69,7 @@ const token = localStorage.getItem("lidarToken");
   formData.append("tileSizeKm", "10");
 
   setIsUploading(true);
-  console.log("token",token)
+  // console.log("token",token)
   try {
     const res = await fetch("http://localhost:5000/api/maps/upload", {
       method: "POST",
