@@ -23,7 +23,7 @@ export default function AdminDashboardPage() {
   const [latestMap, setLatestMap] = useState<any>(null);
   const [showMapModal, setShowMapModal] = useState(false);
 const [statusFilter, setStatusFilter] = useState<string>("all");
-   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL || http://localhost:5000
+   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL ;
 
 const filteredTiles = statusFilter === "all"
   ? tiles

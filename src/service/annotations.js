@@ -5,7 +5,7 @@ import axios from "axios";
 
 export const saveAnnotationToDB = async (annotation) => {
   const token = localStorage.getItem("lidarToken");
- const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL || http://localhost:5000
+ const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL ;
   const res = await fetch(`${baseUrl}/api/annotations`, {
     method: "POST",
     headers: {

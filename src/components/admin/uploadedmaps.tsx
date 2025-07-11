@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function UploadedMapsModal({ onClose, onSelectMap }) {
   const [maps, setMaps] = useState([]);
-   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL || http://localhost:5000
+   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL ;
 
 
  useEffect(() => {

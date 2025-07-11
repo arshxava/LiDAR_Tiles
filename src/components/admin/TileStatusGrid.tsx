@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 export default function TileStatusGrid({ tiles }) {
   const [selectedTile, setSelectedTile] = useState(null);
-   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL || http://localhost:5000
+   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL ;
 
   const getFullUrl = (url) =>
     url?.startsWith("http") ? url : `${baseUrl}${url}`;

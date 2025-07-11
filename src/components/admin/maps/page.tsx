@@ -9,7 +9,7 @@ export default function MapDashboardPage() {
     const { id } = useParams(); // Get map ID from URL
     const [tiles, setTiles] = useState([]);
     const [loading, setLoading] = useState(true);
-   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL || http://localhost:5000 ;
+   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL ;
 
     useEffect(() => {
         const fetchTiles = async () => {

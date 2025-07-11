@@ -19,7 +19,7 @@ export default function TileOverlayViewer({ mapUrl, tiles }: Props) {
   const [selectedTile, setSelectedTile] = useState<Tile | null>(null);
   const [zoom, setZoom] = useState(1);
   const [origin, setOrigin] = useState("center");
-   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL || http://localhost:5000
+   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL ;
   const CANVAS_W = 1000;
   const CANVAS_H = 1000;
  
