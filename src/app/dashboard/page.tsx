@@ -387,7 +387,7 @@ export default function DashboardPage() {
   }
  
   try {
-    // console.log("📦 Submitting annotations:", {
+    console.log("📦 Submitting annotations:", {
       tileId: selectedTile.id,
       annotations,
       submittedBy: user.id,  // ✅ added user ID

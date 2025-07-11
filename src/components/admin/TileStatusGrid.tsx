@@ -45,9 +45,15 @@ export default function TileStatusGrid({ tiles }) {
               <p>
                 <strong>Status:</strong> {tile.status}
               </p>
-              <p>
-                <strong>Completed By:</strong> {tile.assignedTo?.username || "Unknown"}
-              </p>
+              {tile.status !== "available" && (
+  <p>
+    <strong>
+      {tile.status === "in_progress" ? "Assigned To:" : "Completed By:"}
+    </strong>{" "}
+    {tile.assignedTo?.username || "Unknown"}
+  </p>
+)}
+              
 
               {isCompleted && tile.annotations?.length > 0 && (
                 <div className="mt-2 text-xs">
@@ -87,9 +93,18 @@ export default function TileStatusGrid({ tiles }) {
                 <p>
                   <strong>Status:</strong> {selectedTile.status}
                 </p>
-                <p>
-                  <strong>Completed By:</strong> {selectedTile.assignedTo?.username || "Unknown"}
-                </p>
+                {/* <p>
+                  <strong>Assigned To:</strong> {selectedTile.assignedTo?.username || "Unknown"}
+                </p> */}
+                {selectedTile.status !== "available" && (
+  <p>
+    <strong>
+      {selectedTile.status === "in_progress" ? "Assigned To:" : "Completed By:"}
+    </strong>{" "}
+    {selectedTile.assignedTo?.username || "Unknown"}
+  </p>
+)}
+
 
                 {selectedTile.annotations?.length > 0 && (
                   <div className="text-sm">
