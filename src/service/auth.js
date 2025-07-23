@@ -1,8 +1,13 @@
 // services/auth.js
 import api from './api';
 
+
 export const register = async (formData) => {
-  const res = await api.post('/auth/register', formData);
+  const res = await api.post('/auth/register', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return res.data;
 };
 
