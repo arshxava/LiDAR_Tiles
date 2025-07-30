@@ -47,7 +47,21 @@ export default function UploadedMapsModal({ onClose, onSelectMap }) {
               <Card
                 key={map._id}
                 className="cursor-pointer hover:bg-muted"
-                onClick={() => onSelectMap(map)}
+               onClick={async () => {
+  try {
+    const token = localStorage.getItem("lidarToken");
+    const tileRes = await axios.get(`${baseUrl}/api/maps/${map._id}/tiles`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    onSelectMap({ ...map, tiles: tileRes.data }); // Pass map with populated tiles
+  } catch (error) {
+    console.error("Error fetching tiles for selected map:", error);
+  }
+}}
+
               >
                 <CardHeader>
                   <CardTitle className="text-base">{map.name || "Untitled Map"}</CardTitle>

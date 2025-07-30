@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 export default function TileStatusGrid({ tiles }) {
   const [selectedTile, setSelectedTile] = useState(null);
-   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL ;
+  const baseUrl = process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL;
 
   const getFullUrl = (url) =>
     url?.startsWith("http") ? url : `${baseUrl}${url}`;
@@ -47,28 +47,36 @@ export default function TileStatusGrid({ tiles }) {
                 <strong>Status:</strong> {tile.status}
               </p>
               {tile.status !== "available" && (
-  <p>
-    <strong>
-      {tile.status === "in_progress" ? "Assigned To:" : "Completed By:"}
-    </strong>{" "}
-    {tile.assignedTo?.username || "Unknown"}
-  </p>
-)}
-              
-
-              {isCompleted && tile.annotations?.length > 0 && (
-                <div className="mt-2 text-xs">
-                  <strong>Annotations:</strong>
-                  <ul className="list-disc list-inside mt-1 space-y-1">
-                    {tile.annotations.map((ann, i) => (
-                      <li key={ann._id || i}>
-                        <strong>{ann.label || "No Label"} - {ann.period || "No Period"}</strong>
-                        {ann.notes ? `: ${ann.notes}` : ": No notes"}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <p>
+                  <strong>
+                    {tile.status === "in_progress" ? "Assigned To:" : "Completed By:"}
+                  </strong>{" "}
+                  {tile.assignedTo?.username || "Unknown"}
+                </p>
               )}
+
+
+              {tile.status === "completed" && (
+                <>
+                  {tile.annotations?.length > 0 ? (
+                    <div className="mt-2 text-xs">
+                      <strong>Annotations:</strong>
+                      <ul className="list-disc list-inside mt-1 space-y-1">
+                        {tile.annotations.map((ann, i) => (
+                          <li key={ann._id || i}>
+                            <strong>{ann.label || "No Label"} - {ann.period || "No Period"}</strong>
+                            {ann.notes ? `: ${ann.notes}` : ": No notes"}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <p className="text-sm mt-2 font-bold text-600">⚠️ No Echo found</p>
+
+                  )}
+                </>
+              )}
+
             </CardContent>
           </Card>
         );
@@ -98,27 +106,34 @@ export default function TileStatusGrid({ tiles }) {
                   <strong>Assigned To:</strong> {selectedTile.assignedTo?.username || "Unknown"}
                 </p> */}
                 {selectedTile.status !== "available" && (
-  <p>
-    <strong>
-      {selectedTile.status === "in_progress" ? "Assigned To:" : "Completed By:"}
-    </strong>{" "}
-    {selectedTile.assignedTo?.username || "Unknown"}
-  </p>
-)}
-
-
-                {selectedTile.annotations?.length > 0 && (
-                  <div className="text-sm">
-                    <strong>Annotations:</strong>
-                    <ul className="list-disc list-inside mt-2 space-y-1">
-                      {selectedTile.annotations.map((ann, i) => (
-                        <li key={ann._id || i}>
-                          <strong>{ann.label || "No Label"}</strong> ({ann.period || "No Period"}): {ann.notes || "No notes"}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <p>
+                    <strong>
+                      {selectedTile.status === "in_progress" ? "Assigned To:" : "Completed By:"}
+                    </strong>{" "}
+                    {selectedTile.assignedTo?.username || "Unknown"}
+                  </p>
                 )}
+
+
+                {selectedTile.status === "completed" && (
+                  <>
+                    {selectedTile.annotations?.length > 0 ? (
+                      <div className="text-sm">
+                        <strong>Annotations:</strong>
+                        <ul className="list-disc list-inside mt-2 space-y-1">
+                          {selectedTile.annotations.map((ann, i) => (
+                            <li key={ann._id || i}>
+                              <strong>{ann.label || "No Label"}</strong> ({ann.period || "No Period"}): {ann.notes || "No notes"}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : (
+                      <p className="text-sm mt-2 font-bold text-600">⚠️ No Echo found</p>
+                    )}
+                  </>
+                )}
+
               </div>
             </>
           )}
