@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Save, Loader2, SkipForward } from "lucide-react";
-import { getAssignedTile, submitTile } from "../../service/tiles";
+import { getAssignedTile, submitTile , markTileAsNoEcho } from "../../service/tiles";
 import { getUserAnnotations, getLeaderboard } from "../../service/user";
 import { saveAnnotationToDB } from "../../service/annotations";
 
@@ -43,7 +43,7 @@ export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL ;
+  const baseUrl = process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL;
 
   const [selectedTile, setSelectedTile] = useState<Tile | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
@@ -354,74 +354,107 @@ export default function DashboardPage() {
       </div>
     );
   }
- const completeTile = async () => {
-  // console.log("🔍 Starting completeTile function...");
- 
-  const validAnnotations = annotations.filter((a) => a && a.type && a.data);
-  // console.log("✅ Valid annotations:", validAnnotations);
- 
-  if (!selectedTile) {
-    // console.log("⛔ No selected tile.");
-    toast({
-      variant: "destructive",
-      title: "No tile selected",
-    });
-    return;
-  }
- 
-  if (validAnnotations.length === 0) {
-    // console.log("⛔ No valid annotations to submit.");
-    toast({
-      variant: "destructive",
-      title: "No annotations to submit",
-    });
-    return;
-  }
- 
-  if (!user?.id) {
-    // console.log("⛔ No user logged in.");
-    toast({
-      variant: "destructive",
-      title: "User information missing",
-    });
-    return;
-  }
- 
-  try {
-    console.log("📦 Submitting annotations:", {
-      tileId: selectedTile.id,
-      annotations,
-      submittedBy: user.id,  // ✅ added user ID
-    });
- 
-   await submitTile({
-  tileId: selectedTile.id,
-  annotationIds: annotations.map((a) => a._id),  // ✅ Only send the IDs
-  submittedBy: user.id,
-});
- 
-    // console.log("✅ Tile submitted successfully");
- 
-    toast({ title: "Tile submitted successfully ✅" });
- 
-    // console.log("🧹 Clearing annotations and local storage...");
-    setAnnotations([]);
-    localStorage.removeItem("currentTile");
-    localStorage.removeItem("currentAnnotations");
- 
-    // console.log("🔄 Fetching next assigned tile...");
-    await fetchAssignedTile();
- 
-    // console.log("🎉 Tile submission process completed.");
-  } catch (err) {
-    // console.error("❌ Failed to submit tile:", err);
-    toast({
-      variant: "destructive",
-      title: "Failed to submit tile",
-    });
-  }
-};
- 
+  const completeTile = async () => {
+    // console.log("🔍 Starting completeTile function...");
+
+    const validAnnotations = annotations.filter((a) => a && a.type && a.data);
+    // console.log("✅ Valid annotations:", validAnnotations);
+
+    if (!selectedTile) {
+      // console.log("⛔ No selected tile.");
+      toast({
+        variant: "destructive",
+        title: "No tile selected",
+      });
+      return;
+    }
+
+    if (validAnnotations.length === 0) {
+      // console.log("⛔ No valid annotations to submit.");
+      toast({
+        variant: "destructive",
+        title: "No annotations to submit",
+      });
+      return;
+    }
+
+    if (!user?.id) {
+      // console.log("⛔ No user logged in.");
+      toast({
+        variant: "destructive",
+        title: "User information missing",
+      });
+      return;
+    }
+
+    try {
+      console.log("📦 Submitting annotations:", {
+        tileId: selectedTile.id,
+        annotations,
+        submittedBy: user.id,  // ✅ added user ID
+      });
+
+      await submitTile({
+        tileId: selectedTile.id,
+        annotationIds: annotations.map((a) => a._id),  // ✅ Only send the IDs
+        submittedBy: user.id,
+      });
+
+      // console.log("✅ Tile submitted successfully");
+
+      toast({ title: "Tile submitted successfully ✅" });
+
+      // console.log("🧹 Clearing annotations and local storage...");
+      setAnnotations([]);
+      localStorage.removeItem("currentTile");
+      localStorage.removeItem("currentAnnotations");
+
+      // console.log("🔄 Fetching next assigned tile...");
+      await fetchAssignedTile();
+
+      // console.log("🎉 Tile submission process completed.");
+    } catch (err) {
+      // console.error("❌ Failed to submit tile:", err);
+      toast({
+        variant: "destructive",
+        title: "Failed to submit tile",
+      });
+    }
+  };
+
+
+  const markTileAsNoEchoClick = async () => {
+    if (!selectedTile) {
+      toast({ variant: "destructive", title: "No tile selected" });
+      return;
+    }
+
+    if (!user?.id) {
+      toast({ variant: "destructive", title: "User information missing" });
+      return;
+    }
+
+    try {
+      await markTileAsNoEcho({
+        tileId: selectedTile.id,
+        submittedBy: user.id,
+      });
+
+      toast({ title: "Tile marked as 'No Echo Found' ✅" });
+
+      // Reset state
+      setAnnotations([]);
+      localStorage.removeItem("currentTile");
+      localStorage.removeItem("currentAnnotations");
+      await fetchAssignedTile();
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to mark tile",
+        description: err.message,
+      });
+    }
+  };
 
 
   return (
@@ -634,6 +667,14 @@ export default function DashboardPage() {
               <SkipForward className="mr-2 h-4 w-4" />
               Skip ({skipCount}/{MAX_SKIP})
             </Button>
+
+            <Button
+              onClick={markTileAsNoEchoClick}
+              variant="outline"
+            >
+              No Echo Found
+            </Button>
+
           </div>
 
           <Card className="mt-4 shadow">
