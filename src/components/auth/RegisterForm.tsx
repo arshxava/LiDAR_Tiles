@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { login as loginApi } from '@/service/auth';
 import { register as registerApi } from '@/service/auth';
 import { useRouter } from "next/navigation";
-
+import { useState } from "react";
 import {
   Form,
   FormControl,
@@ -40,6 +40,7 @@ const formSchema = z.object({
 export default function RegisterForm() {
   const { toast } = useToast();
 const router = useRouter();
+const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -54,9 +55,10 @@ const router = useRouter();
 
  const onSubmit = async (values: z.infer<typeof formSchema>) => {
   try {
+    setIsLoading(true);
 
     const res = await registerApi({
-      username:values.username,
+      username: values.username,
       email: values.email,
       password: values.password,
       role: values.role,
@@ -68,19 +70,20 @@ const router = useRouter();
       password: values.password,
     });
 
-
     toast({
       title: 'Registration Successful',
       description: 'Welcome to LiDAR Explorer!',
     });
 
-     router.push('/login');
+    router.push('/login');
   } catch (error: any) {
     toast({
       variant: 'destructive',
       title: 'Registration Failed',
       description: error.response?.data?.message || 'An unexpected error occurred.',
     });
+  } finally {
+    setIsLoading(false);
   }
 };
 
@@ -148,9 +151,14 @@ const router = useRouter();
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6">
-              Register
-            </Button>
+           <Button
+  type="submit"
+  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6"
+  disabled={isLoading}
+>
+  {isLoading ? "Registering..." : "Register"}
+</Button>
+
           </form>
         </Form>
         <p className="mt-8 text-center text-sm text-muted-foreground">
