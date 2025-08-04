@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import TileStatusGrid from "@/components/admin/TileStatusGrid";
 import AdminStats from "@/components/admin/AdminStats";
 import MapUploadForm from "@/components/admin/MapUploadForm";
+import ChatRoom from "@/components/admin/ChatBox";
 import UploadedMapsModal from "@/components/admin/uploadedmaps";
 import TileOverlayViewer from "@/components/admin/tileview";
 import type { Tile } from "@/types";
@@ -21,6 +22,10 @@ export default function AdminDashboardPage() {
   const [tileLoading, setTileLoading] = useState<boolean>(true);
   const [mapName, setMapName] = useState<string>("");
   const [latestMap, setLatestMap] = useState<any>(null);
+
+const [roomId, setRoomId] = useState("general"); 
+const [chatLoading, setChatLoading] = useState(false);
+
   const [showMapModal, setShowMapModal] = useState(false);
 const [statusFilter, setStatusFilter] = useState<string>("all");
    const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL ;
@@ -146,6 +151,34 @@ const filteredTiles = statusFilter === "all"
           <AdminStats tiles={tiles} />
         )}
       </section>
+
+      <Separator />
+
+<section>
+  <div className="flex items-center justify-between mb-4">
+    <h3 className="text-xl font-semibold font-headline text-foreground">
+      Chatroom
+    </h3>
+    <select
+      value={roomId}
+      onChange={(e) => setRoomId(e.target.value)}
+      className="border border-input rounded px-3 py-1 text-sm"
+    >
+      <option value="general">General</option>
+      <option value="annotation">Annotation</option>
+      <option value="support">Support</option>
+    </select>
+  </div>
+
+  {chatLoading ? (
+    <div className="flex justify-center py-8">
+      <Loader2 className="h-8 w-8 animate-spin text-muted" />
+    </div>
+  ) : (
+<ChatRoom roomId={roomId} user={user} />
+  )}
+</section>
+
 
       <Separator />
 
