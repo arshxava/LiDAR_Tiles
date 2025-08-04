@@ -24,7 +24,7 @@ export default function ChatRoom({ roomId, user }: ChatRoomProps) {
   const [chat, setChat] = useState<ChatMessage[]>([]);
   const [tile, setTile] = useState<File | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [showConfirm, setShowConfirm] = useState(false); // 🔸 Modal visibility
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const socketRef = useRef<Socket | null>(null);
   const senderRef = useRef("Unknown");
@@ -39,7 +39,7 @@ export default function ChatRoom({ roomId, user }: ChatRoomProps) {
     const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000");
     socketRef.current = socket;
 
-    socket.on("connect", () => console.log("✅ Connected:", socket.id));
+    socket.on("connect", () => console.log("✅ Connected to socket"));
     socket.on("connect_error", (err) => console.error("❌ Socket error:", err.message));
 
     socket.emit("joinRoom", { roomId });
@@ -102,11 +102,7 @@ export default function ChatRoom({ roomId, user }: ChatRoomProps) {
         </button>
       </div>
 
-      {notice && (
-        <div className="text-green-600 text-sm mb-2 font-medium">
-          {notice}
-        </div>
-      )}
+      {notice && <div className="text-green-600 text-sm mb-2 font-medium">{notice}</div>}
 
       <div className="h-80 overflow-y-auto border rounded p-3 mb-4 bg-gray-50 space-y-2">
         {chat.length === 0 ? (
@@ -158,7 +154,6 @@ export default function ChatRoom({ roomId, user }: ChatRoomProps) {
         </button>
       </div>
 
-      {/* 🔸 Confirmation Popup */}
       {showConfirm && (
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
           <div className="bg-white p-5 rounded-lg shadow-md text-center space-y-4 max-w-sm w-full">
