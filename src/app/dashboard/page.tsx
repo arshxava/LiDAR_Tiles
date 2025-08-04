@@ -75,6 +75,23 @@ export default function DashboardPage() {
 
   const imageRef = useRef<HTMLImageElement | null>(null);
   console.log("response", user);
+const [showTutorial, setShowTutorial] = useState(true);
+const [showShareDialog, setShowShareDialog] = useState(false);
+//tutorial logic
+
+// const [showTutorial, setShowTutorial] = useState(false);
+
+// useEffect(() => {
+//   const tutorialSeen = localStorage.getItem("tutorialSeen");
+//   if (!tutorialSeen) {
+//     setShowTutorial(true);
+//   }
+// }, []);
+
+// const closeTutorial = () => {
+//   localStorage.setItem("tutorialSeen", "true");
+//   setShowTutorial(false);
+// };
 
   useEffect(() => {
     if (!loading && user) {
@@ -122,7 +139,7 @@ export default function DashboardPage() {
 
       fetchUserStats();
     } else if (!loading && !user) {
-      router.push("/login");
+      router.push("/welcome");
     }
   }, [user, loading]);
 
@@ -458,12 +475,15 @@ export default function DashboardPage() {
 
 
   return (
+    <>
+    
     <div className="container mx-auto p-6 space-y-6">
       {/* {newTileAssigned && selectedTile && (
         <div className="bg-yellow-100 p-3 rounded border">
           New tile assigned: <strong>{selectedTile.name || "Untitled"}</strong>
         </div>
       )} */}
+
 
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="lg:w-2/3 space-y-4">
@@ -659,6 +679,9 @@ export default function DashboardPage() {
               )}
               Submit
             </Button>
+            <Button variant="outline" onClick={() => setShowShareDialog(true)}>
+  Share Tile
+</Button>
             <Button
               onClick={skipTile}
               variant="outline"
@@ -814,5 +837,48 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
     </div>
+      <Dialog open={showTutorial} onOpenChange={setShowTutorial}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>How to Annotate Tiles</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <p>✅ Select a tool from the toolbar:</p>
+          <ul className="list-disc pl-6">
+            <li><strong>Point</strong>: Click on the tile to add a point.</li>
+            <li><strong>Polygon</strong>: Click multiple points to draw an area.</li>
+          </ul>
+          <p>💡 You can undo or complete polygons using the buttons below the tile.</p>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => setShowTutorial(false)}>Got it!</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Share this Tile</DialogTitle>
+    </DialogHeader>
+    <p>Copy this link to share the tile:</p>
+    <div className="flex items-center gap-2 mt-2">
+      <Input
+        value={`${window.location.origin}/tile/${selectedTile?.id}`}
+        readOnly
+      />
+      <Button
+        onClick={() => {
+          navigator.clipboard.writeText(
+            `${window.location.origin}/tile/${selectedTile?.id}`
+          );
+          toast({ title: "Link copied ✅" });
+        }}
+      >
+        Copy
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
+</>
   );
 }

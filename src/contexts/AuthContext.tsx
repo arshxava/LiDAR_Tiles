@@ -19,19 +19,6 @@ export const AuthContext = createContext<AuthContextType | undefined>(
 );
  
 const MOCK_USERS: User[] = [
-  {
-    id: "admin1",
-    email: "admin@example.com",
-    role: "SUPER_ADMIN",
-    name: "Super Admin",
-  },
-  { id: "user1", email: "user@example.com", role: "USER", name: "End User" },
-  {
-    id: "user2",
-    email: "kaurarshdeep1100@gmail.com",
-    role: "SUPER_ADMIN",
-    name: "kaurarshdeep1100",
-  },
 ];
  
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -68,12 +55,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (loading) return;
  
-    const publicPaths = ["/login", "/register"];
+    const publicPaths = ["/login", "/register", "/welcome" , "/contactus"];
     const isPublicPath = publicPaths.includes(pathname);
  
     if (!user && !isPublicPath) {
-      router.push("/login");
-    } else if (user && isPublicPath) {
+  router.push("/welcome");
+}else if (user && isPublicPath) {
       router.push(user.role === "SUPER_ADMIN" ? "/admin" : "/dashboard");
     } else if (user && pathname === "/") {
       router.push(user.role === "SUPER_ADMIN" ? "/admin" : "/dashboard");

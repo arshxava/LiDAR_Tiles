@@ -68,6 +68,8 @@ const token = localStorage.getItem("lidarToken");
   formData.append("minLng", minLng);
   formData.append("maxLng", maxLng);
   formData.append("tileSizeKm", "10");
+  formData.append("fileType", mapFile.name.split('.').pop()?.toLowerCase() || "");
+
 
   setIsUploading(true);
   // console.log("token",token)
@@ -124,22 +126,23 @@ const token = localStorage.getItem("lidarToken");
           <CardTitle className="font-headline">Upload New LiDAR Map</CardTitle>
         </div>
         <CardDescription>
-          Upload a GeoTIFF or raster map file and define its properties. This
-          will simulate the upload and tiling process.
-        </CardDescription>
+  Upload a GeoTIFF, ASC, LAS, or LAZ file and define its properties.
+</CardDescription>
+
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <Label htmlFor="map-file-input">Map File</Label>
             <Input
-              id="map-file-input"
-              type="file"
-              onChange={handleFileChange}
-              accept=".tif,.tiff,.asc,image/*"
-              required
-              className="mt-1"
-            />
+  id="map-file-input"
+  type="file"
+  onChange={handleFileChange}
+  accept=".tif,.tiff,.asc,.las,.laz,image/*"  
+  required
+  className="mt-1"
+/>
+
             {mapFile && (
               <p className="text-xs text-muted-foreground mt-1">
                 Selected: {mapFile.name}
@@ -169,7 +172,7 @@ const token = localStorage.getItem("lidarToken");
               className="mt-1"
             />
           </div>
-
+{!['las','laz'].includes(mapFile?.name.split('.').pop()?.toLowerCase() || '') && (
           <fieldset className="space-y-4 rounded-md border p-4">
             <legend className="-ml-1 px-1 text-sm font-medium text-foreground">
               Geographic Bounds
@@ -233,7 +236,7 @@ const token = localStorage.getItem("lidarToken");
               generation.
             </p>
           </fieldset>
-
+)}
           <Button
             type="submit"
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
