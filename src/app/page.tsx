@@ -14,7 +14,7 @@ export default function HomePage() {
       if (user) {
         router.replace(user.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard');
       } else {
-        router.replace('/welcome');
+        router.replace('/login');
 ;
       }
     }

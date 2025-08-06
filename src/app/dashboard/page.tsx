@@ -139,7 +139,7 @@ const [showShareDialog, setShowShareDialog] = useState(false);
 
       fetchUserStats();
     } else if (!loading && !user) {
-      router.push("/welcome");
+      router.push("/login");
     }
   }, [user, loading]);
 

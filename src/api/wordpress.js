@@ -5,9 +5,17 @@ export const registerToWordPress = async (formData) => {
     const res = await axios.post(
       'https://echoesfromthepast.be/wp-json/custom/v1/register',
       {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
+      username: formData.username,
+      email: formData.email,
+      password: formData.password,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      sex: formData.sex,
+      age: formData.age,
+      education: formData.education,
+      province: formData.province,
+      country: formData.country,
+      role: formData.role,
       }
     );
  

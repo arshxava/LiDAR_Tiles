@@ -55,11 +55,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (loading) return;
  
-    const publicPaths = ["/login", "/register", "/welcome" , "/contactus"];
+    const publicPaths = ["/login", "/register",
+      //  "/login" , "/contactus"
+      ];
     const isPublicPath = publicPaths.includes(pathname);
  
     if (!user && !isPublicPath) {
-  router.push("/welcome");
+  router.push("/login");
 }else if (user && isPublicPath) {
       router.push(user.role === "SUPER_ADMIN" ? "/admin" : "/dashboard");
     } else if (user && pathname === "/") {

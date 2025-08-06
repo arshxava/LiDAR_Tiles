@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import axios from "axios";
-
+import { MessageCircle, X } from "lucide-react";
 export default function AdminDashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -22,7 +22,7 @@ export default function AdminDashboardPage() {
   const [tileLoading, setTileLoading] = useState<boolean>(true);
   const [mapName, setMapName] = useState<string>("");
   const [latestMap, setLatestMap] = useState<any>(null);
-
+ const [isChatOpen, setIsChatOpen] = useState(false);
 const [roomId, setRoomId] = useState("general"); 
 const [chatLoading, setChatLoading] = useState(false);
 
@@ -154,7 +154,7 @@ const filteredTiles = statusFilter === "all"
 
       <Separator />
 
-<section>
+{/* <section>
   <div className="flex items-center justify-between mb-4">
     <h3 className="text-xl font-semibold font-headline text-foreground">
       Chatroom
@@ -180,7 +180,7 @@ const filteredTiles = statusFilter === "all"
 </section>
 
 
-      <Separator />
+      <Separator /> */}
 
       <section>
        <div className="flex items-center justify-between mb-4">
@@ -209,6 +209,52 @@ const filteredTiles = statusFilter === "all"
 
         )}
       </section>
+      
+
+
     </div>
   );
 }
+
+ {/* <div className="fixed bottom-6 right-6 z-50">
+        {!isChatOpen && (
+          <button
+            onClick={() => setIsChatOpen(true)}
+            className="bg-primary text-white rounded-full p-4 shadow-lg hover:bg-primary/90 transition"
+          >
+            <MessageCircle className="h-6 w-6" />
+          </button>
+        )}
+      </div>
+{isChatOpen && (
+  <div
+    className="fixed bottom-20 right-6 w-96 max-w-full h-[500px] bg-white shadow-xl rounded-lg border border-gray-200 flex flex-col z-[9999] transition-transform duration-300"
+    style={{
+      animation: "slideUp 0.3s ease-out",
+    }}
+  >
+    {/* Header */}
+//     <div className="flex justify-between items-center p-3 border-b bg-gray-100 rounded-t-lg">
+//       <div className="flex items-center gap-2">
+//         <h4 className="text-lg font-semibold">Chatroom</h4>
+//         <select
+//           value={roomId}
+//           onChange={(e) => setRoomId(e.target.value)}
+//           className="border border-input rounded px-2 py-1 text-sm"
+//         >
+//           <option value="general">General</option>
+//           <option value="annotation">Annotation</option>
+//           <option value="support">Support</option>
+//         </select>
+//       </div>
+//       <button onClick={() => setIsChatOpen(false)}>
+//         <X className="h-5 w-5 text-gray-500 hover:text-gray-700" />
+//       </button>
+//     </div>
+
+//     {/* Chat Messages */}
+//     <div className="flex-1 overflow-hidden">
+//       <ChatRoom roomId={roomId} user={user} />
+//     </div>
+//   </div>
+// )}
