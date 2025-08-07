@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Save, Loader2, SkipForward } from "lucide-react";
-import { getAssignedTile, submitTile , markTileAsNoEcho } from "../../service/tiles";
+import { getAssignedTile, submitTile, markTileAsNoEcho } from "../../service/tiles";
 import { getUserAnnotations, getLeaderboard } from "../../service/user";
 import { saveAnnotationToDB } from "../../service/annotations";
 
@@ -75,23 +75,26 @@ export default function DashboardPage() {
 
   const imageRef = useRef<HTMLImageElement | null>(null);
   console.log("response", user);
-const [showTutorial, setShowTutorial] = useState(true);
-const [showShareDialog, setShowShareDialog] = useState(false);
-//tutorial logic
+  const [showTutorial, setShowTutorial] = useState(true);
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
-// const [showTutorial, setShowTutorial] = useState(false);
+  const [showWelcomeDialog, setShowWelcomeDialog] = useState(true);
 
-// useEffect(() => {
-//   const tutorialSeen = localStorage.getItem("tutorialSeen");
-//   if (!tutorialSeen) {
-//     setShowTutorial(true);
-//   }
-// }, []);
+  //tutorial logic
 
-// const closeTutorial = () => {
-//   localStorage.setItem("tutorialSeen", "true");
-//   setShowTutorial(false);
-// };
+  // const [showTutorial, setShowTutorial] = useState(false);
+
+  // useEffect(() => {
+  //   const tutorialSeen = localStorage.getItem("tutorialSeen");
+  //   if (!tutorialSeen) {
+  //     setShowTutorial(true);
+  //   }
+  // }, []);
+
+  // const closeTutorial = () => {
+  //   localStorage.setItem("tutorialSeen", "true");
+  //   setShowTutorial(false);
+  // };
 
   useEffect(() => {
     if (!loading && user) {
@@ -476,33 +479,33 @@ const [showShareDialog, setShowShareDialog] = useState(false);
 
   return (
     <>
-    
-    <div className="container mx-auto p-6 space-y-6">
-      {/* {newTileAssigned && selectedTile && (
+
+      <div className="container mx-auto p-6 space-y-6">
+        {/* {newTileAssigned && selectedTile && (
         <div className="bg-yellow-100 p-3 rounded border">
           New tile assigned: <strong>{selectedTile.name || "Untitled"}</strong>
         </div>
       )} */}
 
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="lg:w-2/3 space-y-4">
-          <AnnotationToolbar
-            currentTool={currentTool}
-            onToolSelect={setCurrentTool}
-          />
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="lg:w-2/3 space-y-4">
+            <AnnotationToolbar
+              currentTool={currentTool}
+              onToolSelect={setCurrentTool}
+            />
 
-          {selectedTile?.imageUrl ? (
-            <div className="relative w-full h-[500px] overflow-hidden border bg-white rounded-xl shadow">
-              <img
-                src={selectedTile.imageUrl}
-                alt={`Tile - ${selectedTile.name}`}
-                className="w-full h-full object-contain"
-                ref={imageRef}
-                onClick={handleImageClick}
-              />
+            {selectedTile?.imageUrl ? (
+              <div className="relative w-full h-[500px] overflow-hidden border bg-white rounded-xl shadow">
+                <img
+                  src={selectedTile.imageUrl}
+                  alt={`Tile - ${selectedTile.name}`}
+                  className="w-full h-full object-contain"
+                  ref={imageRef}
+                  onClick={handleImageClick}
+                />
 
-              {/* {[...annotations, ...filteredPastAnnotations].map((ann) =>
+                {/* {[...annotations, ...filteredPastAnnotations].map((ann) =>
                 ann.type === "point" ? (
                   <div
                     key={ann.id}
@@ -537,348 +540,388 @@ const [showShareDialog, setShowShareDialog] = useState(false);
                 ) : null
               )} */}
 
-              {[...annotations, ...filteredPastAnnotations].map((ann) =>
-                ann.type === "polygon" && Array.isArray(ann.data?.points) ? (
-                  <svg
-                    key={ann.id}
-                    className="absolute top-0 left-0 w-full h-full pointer-events-none"
-                  >
-                    {(() => {
-                      if (!imageRef.current) return null;
+                {[...annotations, ...filteredPastAnnotations].map((ann) =>
+                  ann.type === "polygon" && Array.isArray(ann.data?.points) ? (
+                    <svg
+                      key={ann.id}
+                      className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                    >
+                      {(() => {
+                        if (!imageRef.current) return null;
 
+                        const rect = imageRef.current.getBoundingClientRect();
+                        const scale = Math.min(
+                          rect.width / imageRef.current.naturalWidth,
+                          rect.height / imageRef.current.naturalHeight
+                        );
+                        const offsetX =
+                          (rect.width - imageRef.current.naturalWidth * scale) /
+                          2;
+                        const offsetY =
+                          (rect.height - imageRef.current.naturalHeight * scale) /
+                          2;
+
+                        const scaledPoints = ann.data.points
+                          .map(
+                            (p: any) =>
+                              `${p.x * scale + offsetX},${p.y * scale + offsetY}`
+                          )
+                          .join(" ");
+
+                        return (
+                          <>
+                            <polygon
+                              points={scaledPoints}
+                              fill="none"
+                              stroke="red"
+                              strokeWidth={2}
+                            />
+                            <text
+                              x={ann.data.points[0].x * scale + offsetX + 5}
+                              y={ann.data.points[0].y * scale + offsetY - 5}
+                              fill="red"
+                              fontSize="12px"
+                            >
+                              {ann.label}
+                            </text>
+                          </>
+                        );
+                      })()}
+                    </svg>
+                  ) : null
+                )}
+
+                {drawingpolygon && polygonPoints.length > 0 && imageRef.current && (
+                  <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">
+                    {(() => {
                       const rect = imageRef.current.getBoundingClientRect();
                       const scale = Math.min(
                         rect.width / imageRef.current.naturalWidth,
                         rect.height / imageRef.current.naturalHeight
                       );
-                      const offsetX =
-                        (rect.width - imageRef.current.naturalWidth * scale) /
-                        2;
-                      const offsetY =
-                        (rect.height - imageRef.current.naturalHeight * scale) /
-                        2;
+                      const offsetX = (rect.width - imageRef.current.naturalWidth * scale) / 2;
+                      const offsetY = (rect.height - imageRef.current.naturalHeight * scale) / 2;
 
-                      const scaledPoints = ann.data.points
-                        .map(
-                          (p: any) =>
-                            `${p.x * scale + offsetX},${p.y * scale + offsetY}`
-                        )
-                        .join(" ");
+                      const scaled = polygonPoints.map(p => ({
+                        x: p.x * scale + offsetX,
+                        y: p.y * scale + offsetY
+                      }));
 
                       return (
                         <>
-                          <polygon
-                            points={scaledPoints}
-                            fill="none"
-                            stroke="red"
-                            strokeWidth={2}
+                          {/* Draw small circle at first point */}
+                          <circle
+                            cx={scaled[0].x}
+                            cy={scaled[0].y}
+                            r={4}
+                            fill="#007bff"
+                            stroke="white"
+                            strokeWidth={1}
                           />
-                          <text
-                            x={ann.data.points[0].x * scale + offsetX + 5}
-                            y={ann.data.points[0].y * scale + offsetY - 5}
-                            fill="red"
-                            fontSize="12px"
-                          >
-                            {ann.label}
-                          </text>
+
+                          {/* Draw lines between each point */}
+                          {scaled.map((point, idx) => {
+                            if (idx === 0) return null;
+                            const prev = scaled[idx - 1];
+                            return (
+                              <line
+                                key={idx}
+                                x1={prev.x}
+                                y1={prev.y}
+                                x2={point.x}
+                                y2={point.y}
+                                stroke="#007bff"
+                                strokeWidth={2}
+                              />
+                            );
+                          })}
                         </>
                       );
                     })()}
                   </svg>
-                ) : null
-              )}
+                )}
+              </div>
+            ) : (
+              <div className="h-[500px] flex items-center justify-center bg-gray-100 text-gray-600 border rounded shadow">
+                No tile image available.
+              </div>
+            )}
 
-              {drawingpolygon && polygonPoints.length > 0 && imageRef.current && (
-                <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">
-                  {(() => {
-                    const rect = imageRef.current.getBoundingClientRect();
-                    const scale = Math.min(
-                      rect.width / imageRef.current.naturalWidth,
-                      rect.height / imageRef.current.naturalHeight
-                    );
-                    const offsetX = (rect.width - imageRef.current.naturalWidth * scale) / 2;
-                    const offsetY = (rect.height - imageRef.current.naturalHeight * scale) / 2;
-
-                    const scaled = polygonPoints.map(p => ({
-                      x: p.x * scale + offsetX,
-                      y: p.y * scale + offsetY
-                    }));
-
-                    return (
-                      <>
-                        {/* Draw small circle at first point */}
-                        <circle
-                          cx={scaled[0].x}
-                          cy={scaled[0].y}
-                          r={4}
-                          fill="#007bff"
-                          stroke="white"
-                          strokeWidth={1}
-                        />
-
-                        {/* Draw lines between each point */}
-                        {scaled.map((point, idx) => {
-                          if (idx === 0) return null;
-                          const prev = scaled[idx - 1];
-                          return (
-                            <line
-                              key={idx}
-                              x1={prev.x}
-                              y1={prev.y}
-                              x2={point.x}
-                              y2={point.y}
-                              stroke="#007bff"
-                              strokeWidth={2}
-                            />
-                          );
-                        })}
-                      </>
-                    );
-                  })()}
-                </svg>
-              )}
-            </div>
-          ) : (
-            <div className="h-[500px] flex items-center justify-center bg-gray-100 text-gray-600 border rounded shadow">
-              No tile image available.
-            </div>
-          )}
-
-          {currentTool === "polygon" && drawingpolygon && polygonPoints.length > 0 && (
-            <div className="flex gap-2 mt-2">
-              <Button
-                onClick={() => {
-                  setpolygonPoints((prev) => prev.slice(0, -1));
-                }}
-                variant="secondary"
-              >
-                Undo Last Point
-              </Button>
-
-              {polygonPoints.length > 2 && (
+            {currentTool === "polygon" && drawingpolygon && polygonPoints.length > 0 && (
+              <div className="flex gap-2 mt-2">
                 <Button
                   onClick={() => {
-                    setCurrentAnnotationData({ points: polygonPoints });
-                    setCurrentAnnotationType("polygon");
-                    setIsAnnotationDialogOpen(true);
+                    setpolygonPoints((prev) => prev.slice(0, -1));
                   }}
+                  variant="secondary"
                 >
-                  Complete Echo
+                  Undo Last Point
                 </Button>
-              )}
+
+                {polygonPoints.length > 2 && (
+                  <Button
+                    onClick={() => {
+                      setCurrentAnnotationData({ points: polygonPoints });
+                      setCurrentAnnotationType("polygon");
+                      setIsAnnotationDialogOpen(true);
+                    }}
+                  >
+                    Complete Echo
+                  </Button>
+                )}
+              </div>
+            )}
+
+
+            <div className="flex space-x-4 mt-4">
+              <Button onClick={completeTile} disabled={loadingTile}>
+                {loadingTile ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4" />
+                )}
+                Submit
+              </Button>
+              <Button variant="outline" onClick={() => setShowShareDialog(true)}>
+                Share Tile
+              </Button>
+              <Button
+                onClick={skipTile}
+                variant="outline"
+                disabled={skipCount >= MAX_SKIP}
+              >
+                <SkipForward className="mr-2 h-4 w-4" />
+                Skip ({skipCount}/{MAX_SKIP})
+              </Button>
+
+              <Button
+                onClick={markTileAsNoEchoClick}
+                variant="outline"
+              >
+                No Echo Found
+              </Button>
+
             </div>
-          )}
 
-
-          <div className="flex space-x-4 mt-4">
-            <Button onClick={completeTile} disabled={loadingTile}>
-              {loadingTile ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="mr-2 h-4 w-4" />
-              )}
-              Submit
-            </Button>
-            <Button variant="outline" onClick={() => setShowShareDialog(true)}>
-  Share Tile
-</Button>
-            <Button
-              onClick={skipTile}
-              variant="outline"
-              disabled={skipCount >= MAX_SKIP}
-            >
-              <SkipForward className="mr-2 h-4 w-4" />
-              Skip ({skipCount}/{MAX_SKIP})
-            </Button>
-
-            <Button
-              onClick={markTileAsNoEchoClick}
-              variant="outline"
-            >
-              No Echo Found
-            </Button>
-
+            <Card className="mt-4 shadow">
+              <CardHeader>
+                <CardTitle>Your Past Annotations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-48">
+                  {pastAnnotations.map((a) => (
+                    <div key={a._id || a.id} className="p-2 border-b">
+                      <strong>{a.label || a.type}</strong> at{" "}
+                      {new Date(a.createdAt).toLocaleString()}
+                    </div>
+                  ))}
+                </ScrollArea>
+              </CardContent>
+            </Card>
           </div>
 
-          <Card className="mt-4 shadow">
-            <CardHeader>
-              <CardTitle>Your Past Annotations</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-48">
-                {pastAnnotations.map((a) => (
-                  <div key={a._id || a.id} className="p-2 border-b">
-                    <strong>{a.label || a.type}</strong> at{" "}
-                    {new Date(a.createdAt).toLocaleString()}
+          <div className="lg:w-1/3 space-y-6">
+            <Card className="shadow">
+              <CardHeader>
+                <CardTitle>Gamification</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>
+                  <strong>🏅 Level: </strong>
+                  {level}
+                </p>
+                <p>
+                  <strong>Badges: </strong>
+                  {badges.join(", ")}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow">
+              <CardHeader>
+                <CardTitle>Leaderboard Stats</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {leaderboard.map((u, idx) => (
+                  <div key={u.username || idx} className="p-1">
+                    {idx + 1}. {u.username} — {u.count} annotations marked
                   </div>
                 ))}
-              </ScrollArea>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow">
+              <CardHeader>
+                <CardTitle>Tile Status</CardTitle>
+                {/* <CardDescription>{selectedTile?.name || "Untitled"}</CardDescription> */}
+              </CardHeader>
+              <CardContent>
+                <p>Status: {selectedTile?.status}</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        <div className="lg:w-1/3 space-y-6">
-          <Card className="shadow">
-            <CardHeader>
-              <CardTitle>Gamification</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>
-                <strong>🏅 Level: </strong>
-                {level}
-              </p>
-              <p>
-                <strong>Badges: </strong>
-                {badges.join(", ")}
-              </p>
-            </CardContent>
-          </Card>
+        <Dialog
+          open={isAnnotationDialogOpen}
+          onOpenChange={setIsAnnotationDialogOpen}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Annotation</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
 
-          <Card className="shadow">
-            <CardHeader>
-              <CardTitle>Leaderboard Stats</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {leaderboard.map((u, idx) => (
-                <div key={u.username || idx} className="p-1">
-                  {idx + 1}. {u.username} — {u.count} annotations marked
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+              {/* ✅ Label Dropdown */}
+              <div>
+                <Label>Echo</Label>
+                <Select value={annotationLabel} onValueChange={setAnnotationLabel}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select label" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Road">Road</SelectItem>
+                    <SelectItem value="Burial mound">Burial mound</SelectItem>
+                    <SelectItem value="Earth wall">Earth wall</SelectItem>
+                    <SelectItem value="Stone wall">Stone wall</SelectItem>
+                    <SelectItem value="Depression">Depression</SelectItem>
+                    <SelectItem value="Erosion ditch">Erosion ditch</SelectItem>
+                    <SelectItem value="Charcoal Meier">Charcoal Meier</SelectItem>
+                    <SelectItem value="Water infrastructure">Water infrastructure</SelectItem>
+                    <SelectItem value="No idea">No idea</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <Card className="shadow">
-            <CardHeader>
-              <CardTitle>Tile Status</CardTitle>
-              {/* <CardDescription>{selectedTile?.name || "Untitled"}</CardDescription> */}
-            </CardHeader>
-            <CardContent>
-              <p>Status: {selectedTile?.status}</p>
-            </CardContent>
-          </Card>
-        </div>
+              {/* ✅ Period Dropdown */}
+              <div>
+                <Label>What period do you think the structure belongs to?</Label>
+                <Select
+                  value={annotationPeriod}
+                  onValueChange={setAnnotationPeriod}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Neolithic or before">
+                      Neolithic or before
+                    </SelectItem>
+                    <SelectItem value="Bronze Age">Bronze Age</SelectItem>
+                    <SelectItem value="Iron Age">Iron Age</SelectItem>
+                    <SelectItem value="Roman">Roman</SelectItem>
+                    <SelectItem value="Medieval">Medieval</SelectItem>
+                    <SelectItem value="Modern">Modern</SelectItem>
+                    <SelectItem value="No idea">No idea</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <Label>Notes</Label>
+                <Textarea
+                  value={annotationNotes}
+                  onChange={(e) => setAnnotationNotes(e.target.value)}
+                />
+              </div>
+
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsAnnotationDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={saveAnnotation}>Save</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
+      <Dialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle className="text-xl font-semibold">
+        Welcome!
+      </DialogTitle>
+      <p className="text-muted-foreground text-sm">
+        You already have access to this project.
+      </p>
+    </DialogHeader>
 
-      <Dialog
-        open={isAnnotationDialogOpen}
-        onOpenChange={setIsAnnotationDialogOpen}
+    <div className="space-y-4 mt-2">
+      <p className="text-sm leading-relaxed">
+        If you'd like to work on a different project, you can head over to your project list anytime.
+      </p>
+      <div className="bg-muted rounded-md p-4">
+        <p className="font-medium text-base mb-1">🚀 Ready to Annotate?</p>
+        <p className="text-sm">
+          You're all set to continue where you left off. Let’s make great progress today!
+        </p>
+      </div>
+    </div>
+
+    <DialogFooter className="pt-4">
+      <Button
+        variant="outline"
+        onClick={() => {
+          router.push("https://echoesfromthepast.be/#"); 
+        }}
       >
+        📁 Go to Projects
+      </Button>
+      <Button onClick={() => setShowWelcomeDialog(false)}>
+        ✅ Continue Annotating
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
+
+      <Dialog open={showTutorial && !showWelcomeDialog} onOpenChange={setShowTutorial}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Annotation</DialogTitle>
+            <DialogTitle>How to Annotate Tiles</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-
-            {/* ✅ Label Dropdown */}
-            <div>
-              <Label>Echo</Label>
-              <Select value={annotationLabel} onValueChange={setAnnotationLabel}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select label" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Road">Road</SelectItem>
-                  <SelectItem value="Burial mound">Burial mound</SelectItem>
-                  <SelectItem value="Earth wall">Earth wall</SelectItem>
-                  <SelectItem value="Stone wall">Stone wall</SelectItem>
-                  <SelectItem value="Depression">Depression</SelectItem>
-                  <SelectItem value="Erosion ditch">Erosion ditch</SelectItem>
-                  <SelectItem value="Charcoal Meier">Charcoal Meier</SelectItem>
-                  <SelectItem value="Water infrastructure">Water infrastructure</SelectItem>
-                  <SelectItem value="No idea">No idea</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* ✅ Period Dropdown */}
-            <div>
-              <Label>What period do you think the structure belongs to?</Label>
-              <Select
-                value={annotationPeriod}
-                onValueChange={setAnnotationPeriod}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select period" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Neolithic or before">
-                    Neolithic or before
-                  </SelectItem>
-                  <SelectItem value="Bronze Age">Bronze Age</SelectItem>
-                  <SelectItem value="Iron Age">Iron Age</SelectItem>
-                  <SelectItem value="Roman">Roman</SelectItem>
-                  <SelectItem value="Medieval">Medieval</SelectItem>
-                  <SelectItem value="Modern">Modern</SelectItem>
-                  <SelectItem value="No idea">No idea</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Notes */}
-            <div>
-              <Label>Notes</Label>
-              <Textarea
-                value={annotationNotes}
-                onChange={(e) => setAnnotationNotes(e.target.value)}
-              />
-            </div>
-
+          <div className="space-y-3">
+            <p>✅ Select a tool from the toolbar:</p>
+            <ul className="list-disc pl-6">
+              <li><strong>Point</strong>: Click on the tile to add a point.</li>
+              <li><strong>Polygon</strong>: Click multiple points to draw an area.</li>
+            </ul>
+            <p>💡 You can undo or complete polygons using the buttons below the tile.</p>
           </div>
-
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsAnnotationDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={saveAnnotation}>Save</Button>
+            <Button onClick={() => setShowTutorial(false)}>Got it!</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-      <Dialog open={showTutorial} onOpenChange={setShowTutorial}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>How to Annotate Tiles</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <p>✅ Select a tool from the toolbar:</p>
-          <ul className="list-disc pl-6">
-            <li><strong>Point</strong>: Click on the tile to add a point.</li>
-            <li><strong>Polygon</strong>: Click multiple points to draw an area.</li>
-          </ul>
-          <p>💡 You can undo or complete polygons using the buttons below the tile.</p>
-        </div>
-        <DialogFooter>
-          <Button onClick={() => setShowTutorial(false)}>Got it!</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-    <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Share this Tile</DialogTitle>
-    </DialogHeader>
-    <p>Copy this link to share the tile:</p>
-    <div className="flex items-center gap-2 mt-2">
-      <Input
-        value={`${window.location.origin}/tile/${selectedTile?.id}`}
-        readOnly
-      />
-      <Button
-        onClick={() => {
-          navigator.clipboard.writeText(
-            `${window.location.origin}/tile/${selectedTile?.id}`
-          );
-          toast({ title: "Link copied ✅" });
-        }}
-      >
-        Copy
-      </Button>
-    </div>
-  </DialogContent>
-</Dialog>
-</>
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Share this Tile</DialogTitle>
+          </DialogHeader>
+          <p>Copy this link to share the tile:</p>
+          <div className="flex items-center gap-2 mt-2">
+            <Input
+              value={`${window.location.origin}/tile/${selectedTile?.id}`}
+              readOnly
+            />
+            <Button
+              onClick={() => {
+                navigator.clipboard.writeText(
+                  `${window.location.origin}/tile/${selectedTile?.id}`
+                );
+                toast({ title: "Link copied ✅" });
+              }}
+            >
+              Copy
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
