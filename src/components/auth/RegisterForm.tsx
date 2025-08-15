@@ -200,19 +200,28 @@ import { MountainSnow } from "lucide-react";
 import { registerToWordPress } from '../../../src/api/wordpress';
 
 const formSchema = z.object({
-  firstName: z.string().min(1, { message: "First name is required." }),
-  lastName: z.string().min(1, { message: "Last name is required." }),
+  firstName: z.string(),
+  lastName: z.string(),
+  // firstName: z.string().min(1, { message: "First name is required." }),
+  // lastName: z.string().min(1, { message: "Last name is required." }),
   username: z.string().min(3, { message: "Username must be at least 3 characters." }),
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
   confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters." }),
-  sex: z.enum(["Male", "Female", "Other"], { required_error: "Select a sex." }),
-  age: z.coerce.number().min(1, { message: "Age must be greater than 0." }),
-  education: z.string().min(1, { message: "Education is required." }),
-  province: z.string().min(1, { message: "Province is required." }),
-  country: z.string().min(1, { message: "Country is required." }),
-  profilePicture: z.any().refine(file => file instanceof File, {
-    message: "Profile picture is required.",
+  sex: z.enum(["Male", "Female", "Other"]),
+  age: z.coerce.number(),
+  // sex: z.enum(["Male", "Female", "Other"], { required_error: "Select a sex." }),
+  // age: z.coerce.number().min(1, { message: "Age must be greater than 0." }),
+  education: z.string(),
+  province: z.string(),
+  country: z.string(),
+  // province: z.string().min(1, { message: "Province is required." }),
+  // country: z.string().min(1, { message: "Country is required." }),
+  profilePicture: z
+  .any()
+  .optional()
+  .refine(file => !file || file instanceof File, {
+    message: "Invalid file format.",
   }),
   role: z.enum(["USER", "SUPER_ADMIN"], { required_error: "You need to select a role." }),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -258,22 +267,22 @@ export default function RegisterForm() {
       formData.append("province", values.province);
       formData.append("country", values.country);
       formData.append("role", values.role);
-      formData.append("profilePic", values.profilePicture); // 👈 must match `.single("profilePic")` in backend
+      formData.append("profilePic", values.profilePicture); 
 
       await registerApi(formData);
-      await registerToWordPress({
-        username: values.username,
-        email: values.email,
-        password: values.password,
-        firstName: values.firstName,
-        lastName: values.lastName,
-        sex: values.sex,
-        age: values.age,
-        education: values.education,
-        province: values.province,
-        country: values.country,
-        role: values.role,
-      });
+      // await registerToWordPress({
+      //   username: values.username,
+      //   email: values.email,
+      //   password: values.password,
+      //   firstName: values.firstName,
+      //   lastName: values.lastName,
+      //   sex: values.sex,
+      //   age: values.age,
+      //   education: values.education,
+      //   province: values.province,
+      //   country: values.country,
+      //   role: values.role,
+      // });
       toast({
         title: 'Registration Successful',
         description: 'Welcome to LiDAR Explorer!',
@@ -309,6 +318,7 @@ export default function RegisterForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
+                    {/* <FormLabel>First Name  <span className="text-red-500">*</span></FormLabel> */}
                     <FormControl>
                       <Input placeholder="John" {...field} />
                     </FormControl>
@@ -321,7 +331,8 @@ export default function RegisterForm() {
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Last Name</FormLabel>
+                    <FormLabel>Last Name </FormLabel>
+                    {/* <FormLabel>Last Name  <span className="text-red-500">*</span></FormLabel> */}
                     <FormControl>
                       <Input placeholder="Doe" {...field} />
                     </FormControl>
@@ -340,7 +351,7 @@ export default function RegisterForm() {
                     <Input
                       type="file"
                       accept="image/*"
-                      required
+                      
                       onChange={(e) => field.onChange(e.target.files?.[0])}
                     />
 
@@ -355,7 +366,8 @@ export default function RegisterForm() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  {/* <FormLabel>Username  </FormLabel> */}
+                  <FormLabel>Username  <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="abc123" {...field} />
                   </FormControl>
@@ -369,7 +381,8 @@ export default function RegisterForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  {/* <FormLabel>Email </FormLabel> */}
+                  <FormLabel>Email  <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="your@email.com" {...field} />
                   </FormControl>
@@ -383,7 +396,8 @@ export default function RegisterForm() {
               name="sex"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Sex</FormLabel>
+                  <FormLabel>Sex </FormLabel>
+                  {/* <FormLabel>Sex  <span className="text-red-500">*</span></FormLabel> */}
                   <FormControl>
                     <RadioGroup
                       value={field.value}
@@ -420,7 +434,8 @@ export default function RegisterForm() {
               name="age"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Age</FormLabel>
+                  <FormLabel>Age  </FormLabel>
+                  {/* <FormLabel>Age  <span className="text-red-500">*</span></FormLabel> */}
                   <FormControl>
                     <Input type="number" min={1} {...field} />
                   </FormControl>
@@ -450,7 +465,8 @@ export default function RegisterForm() {
                 name="province"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Province</FormLabel>
+                    <FormLabel>Province </FormLabel>
+                    {/* <FormLabel>Province  <span className="text-red-500">*</span></FormLabel> */}
                     <FormControl>
                       <Input placeholder="e.g. Ontario" {...field} />
                     </FormControl>
@@ -463,7 +479,8 @@ export default function RegisterForm() {
                 name="country"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Country</FormLabel>
+                    <FormLabel>Country </FormLabel>
+                    {/* <FormLabel>Country  <span className="text-red-500">*</span></FormLabel> */}
                     <FormControl>
                       <Input placeholder="e.g. Canada" {...field} />
                     </FormControl>
@@ -480,7 +497,7 @@ export default function RegisterForm() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>Password  <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
@@ -493,7 +510,7 @@ export default function RegisterForm() {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
+                    <FormLabel>Confirm Password  <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>

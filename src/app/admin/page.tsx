@@ -25,6 +25,8 @@ export default function AdminDashboardPage() {
  const [isChatOpen, setIsChatOpen] = useState(false);
 const [roomId, setRoomId] = useState("general"); 
 const [chatLoading, setChatLoading] = useState(false);
+const [showProjectPopup, setShowProjectPopup] = useState(true);
+const [projects, setProjects] = useState<any[]>([]);
 
   const [showMapModal, setShowMapModal] = useState(false);
 const [statusFilter, setStatusFilter] = useState<string>("all");

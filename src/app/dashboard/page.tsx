@@ -888,7 +888,7 @@ export default function DashboardPage() {
           <div className="space-y-3">
             <p>✅ Select a tool from the toolbar:</p>
             <ul className="list-disc pl-6">
-              <li><strong>Point</strong>: Click on the tile to add a point.</li>
+              {/* <li><strong>Point</strong>: Click on the tile to add a point.</li> */}
               <li><strong>Polygon</strong>: Click multiple points to draw an area.</li>
             </ul>
             <p>💡 You can undo or complete polygons using the buttons below the tile.</p>
