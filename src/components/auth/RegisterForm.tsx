@@ -270,19 +270,19 @@ export default function RegisterForm() {
       formData.append("profilePic", values.profilePicture); 
 
       await registerApi(formData);
-      // await registerToWordPress({
-      //   username: values.username,
-      //   email: values.email,
-      //   password: values.password,
-      //   firstName: values.firstName,
-      //   lastName: values.lastName,
-      //   sex: values.sex,
-      //   age: values.age,
-      //   education: values.education,
-      //   province: values.province,
-      //   country: values.country,
-      //   role: values.role,
-      // });
+      await registerToWordPress({
+        username: values.username,
+        email: values.email,
+        password: values.password,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        sex: values.sex,
+        age: values.age,
+        education: values.education,
+        province: values.province,
+        country: values.country,
+        role: values.role,
+      });
       toast({
         title: 'Registration Successful',
         description: 'Welcome to LiDAR Explorer!',
