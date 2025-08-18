@@ -174,6 +174,370 @@
 //   );
 // }
 
+// "use client";
+
+// import { zodResolver } from "@hookform/resolvers/zod";
+// import { useForm } from "react-hook-form";
+// import * as z from "zod";
+// import Link from "next/link";
+// import { Button } from "@/components/ui/button";
+// import { register as registerApi } from '@/service/auth';
+// import { useRouter } from "next/navigation";
+
+// import {
+//   Form,
+//   FormControl,
+//   FormField,
+//   FormItem,
+//   FormLabel,
+//   FormMessage,
+// } from "@/components/ui/form";
+// import { Input } from "@/components/ui/input";
+// import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+// import { useToast } from "@/hooks/use-toast";
+// import { MountainSnow } from "lucide-react";
+
+// import { registerToWordPress } from '../../../src/api/wordpress';
+
+// const formSchema = z.object({
+//   firstName: z.string(),
+//   lastName: z.string(),
+//   // firstName: z.string().min(1, { message: "First name is required." }),
+//   // lastName: z.string().min(1, { message: "Last name is required." }),
+//   username: z.string().min(3, { message: "Username must be at least 3 characters." }),
+//   email: z.string().email({ message: "Invalid email address." }),
+//   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+//   confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters." }),
+//   sex: z.enum(["Male", "Female", "Other"]),
+//   age: z.coerce.number(),
+//   // sex: z.enum(["Male", "Female", "Other"], { required_error: "Select a sex." }),
+//   // age: z.coerce.number().min(1, { message: "Age must be greater than 0." }),
+//   education: z.string(),
+//   province: z.string(),
+//   country: z.string(),
+//   // province: z.string().min(1, { message: "Province is required." }),
+//   // country: z.string().min(1, { message: "Country is required." }),
+//   profilePicture: z
+//   .any()
+//   .optional()
+//   .refine(file => !file || file instanceof File, {
+//     message: "Invalid file format.",
+//   }),
+//   role: z.enum(["USER", "SUPER_ADMIN"], { required_error: "You need to select a role." }),
+// }).refine((data) => data.password === data.confirmPassword, {
+//   message: "Passwords don't match",
+//   path: ["confirmPassword"],
+// });
+
+// export default function RegisterForm() {
+//   const { toast } = useToast();
+//   const router = useRouter();
+
+//   const form = useForm<z.infer<typeof formSchema>>({
+//     resolver: zodResolver(formSchema),
+//     defaultValues: {
+//       firstName: "",
+//       lastName: "",
+//       username: "",
+//       email: "",
+//       password: "",
+//       confirmPassword: "",
+//       sex: "Male",
+//       age: 18,
+//       education: "",
+//       province: "",
+//       country: "",
+//       role: "USER",
+//     },
+//   });
+//   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+//     try {
+//       const formData = new FormData();
+
+//       // Append all fields
+//       formData.append("firstName", values.firstName);
+//       formData.append("lastName", values.lastName);
+//       formData.append("username", values.username);
+//       formData.append("email", values.email);
+//       formData.append("password", values.password);
+//       formData.append("confirmPassword", values.confirmPassword);
+//       formData.append("sex", values.sex);
+//       formData.append("age", values.age.toString());
+//       formData.append("education", values.education);
+//       formData.append("province", values.province);
+//       formData.append("country", values.country);
+//       formData.append("role", values.role);
+//       formData.append("profilePic", values.profilePicture); 
+
+//       await registerApi(formData);
+//       await registerToWordPress({
+//         username: values.username,
+//         email: values.email,
+//         password: values.password,
+//         firstName: values.firstName,
+//         lastName: values.lastName,
+//         sex: values.sex,
+//         age: values.age,
+//         education: values.education,
+//         province: values.province,
+//         country: values.country,
+//         role: values.role,
+//       });
+//       toast({
+//         title: 'Registration Successful',
+//         description: 'Welcome to LiDAR Explorer!',
+//       });
+
+//       router.push('/login');
+//     } catch (error: any) {
+//       toast({
+//         variant: 'destructive',
+//         title: 'Registration Failed',
+//         description: error.response?.data?.message || 'An unexpected error occurred.',
+//       });
+//     }
+//   };
+
+
+//   return (
+//     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-background to-secondary/30 p-4">
+//       <div className="w-full max-w-md bg-card p-8 rounded-xl shadow-2xl">
+//         <div className="flex flex-col items-center mb-8">
+//           <MountainSnow className="h-16 w-16 text-primary mb-3" />
+//           <h2 className="text-3xl font-headline font-bold text-center text-foreground">Create Account</h2>
+//           <p className="text-muted-foreground text-center mt-1">Join LiDAR Explorer today.</p>
+//         </div>
+//         <Form {...form}>
+//           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+
+//             {/* First & Last Name in one row */}
+//             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//               <FormField
+//                 control={form.control}
+//                 name="firstName"
+//                 render={({ field }) => (
+//                   <FormItem>
+//                     <FormLabel>First Name</FormLabel>
+//                     {/* <FormLabel>First Name  <span className="text-red-500">*</span></FormLabel> */}
+//                     <FormControl>
+//                       <Input placeholder="John" {...field} />
+//                     </FormControl>
+//                     <FormMessage />
+//                   </FormItem>
+//                 )}
+//               />
+//               <FormField
+//                 control={form.control}
+//                 name="lastName"
+//                 render={({ field }) => (
+//                   <FormItem>
+//                     <FormLabel>Last Name </FormLabel>
+//                     {/* <FormLabel>Last Name  <span className="text-red-500">*</span></FormLabel> */}
+//                     <FormControl>
+//                       <Input placeholder="Doe" {...field} />
+//                     </FormControl>
+//                     <FormMessage />
+//                   </FormItem>
+//                 )}
+//               />
+//             </div>
+//             <FormField
+//               control={form.control}
+//               name="profilePicture"
+//               render={({ field }) => (
+//                 <FormItem>
+//                   <FormLabel>Profile Picture</FormLabel>
+//                   <FormControl>
+//                     <Input
+//                       type="file"
+//                       accept="image/*"
+                      
+//                       onChange={(e) => field.onChange(e.target.files?.[0])}
+//                     />
+
+//                   </FormControl>
+//                   <FormMessage />
+//                 </FormItem>
+//               )}
+//             />
+
+//             <FormField
+//               control={form.control}
+//               name="username"
+//               render={({ field }) => (
+//                 <FormItem>
+//                   {/* <FormLabel>Username  </FormLabel> */}
+//                   <FormLabel>Username  <span className="text-red-500">*</span></FormLabel>
+//                   <FormControl>
+//                     <Input placeholder="abc123" {...field} />
+//                   </FormControl>
+//                   <FormMessage />
+//                 </FormItem>
+//               )}
+//             />
+
+//             <FormField
+//               control={form.control}
+//               name="email"
+//               render={({ field }) => (
+//                 <FormItem>
+//                   {/* <FormLabel>Email </FormLabel> */}
+//                   <FormLabel>Email  <span className="text-red-500">*</span></FormLabel>
+//                   <FormControl>
+//                     <Input placeholder="your@email.com" {...field} />
+//                   </FormControl>
+//                   <FormMessage />
+//                 </FormItem>
+//               )}
+//             />
+
+//             <FormField
+//               control={form.control}
+//               name="sex"
+//               render={({ field }) => (
+//                 <FormItem>
+//                   <FormLabel>Sex </FormLabel>
+//                   {/* <FormLabel>Sex  <span className="text-red-500">*</span></FormLabel> */}
+//                   <FormControl>
+//                     <RadioGroup
+//                       value={field.value}
+//                       onValueChange={field.onChange}
+//                       className="flex gap-4"
+//                     >
+//                       <FormItem>
+//                         <FormControl>
+//                           <RadioGroupItem value="Male" id="sex-male" />
+//                         </FormControl>
+//                         <FormLabel htmlFor="sex-male">Male</FormLabel>
+//                       </FormItem>
+//                       <FormItem>
+//                         <FormControl>
+//                           <RadioGroupItem value="Female" id="sex-female" />
+//                         </FormControl>
+//                         <FormLabel htmlFor="sex-female">Female</FormLabel>
+//                       </FormItem>
+//                       <FormItem>
+//                         <FormControl>
+//                           <RadioGroupItem value="Other" id="sex-other" />
+//                         </FormControl>
+//                         <FormLabel htmlFor="sex-other">Other</FormLabel>
+//                       </FormItem>
+//                     </RadioGroup>
+//                   </FormControl>
+//                   <FormMessage />
+//                 </FormItem>
+//               )}
+//             />
+
+//             <FormField
+//               control={form.control}
+//               name="age"
+//               render={({ field }) => (
+//                 <FormItem>
+//                   <FormLabel>Age  </FormLabel>
+//                   {/* <FormLabel>Age  <span className="text-red-500">*</span></FormLabel> */}
+//                   <FormControl>
+//                     <Input type="number" min={1} {...field} />
+//                   </FormControl>
+//                   <FormMessage />
+//                 </FormItem>
+//               )}
+//             />
+
+//             <FormField
+//               control={form.control}
+//               name="education"
+//               render={({ field }) => (
+//                 <FormItem>
+//                   <FormLabel>Education</FormLabel>
+//                   <FormControl>
+//                     <Input placeholder="e.g. Bachelor's in Computer Science" {...field} />
+//                   </FormControl>
+//                   <FormMessage />
+//                 </FormItem>
+//               )}
+//             />
+
+//             {/* Province & Country in one row */}
+//             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//               <FormField
+//                 control={form.control}
+//                 name="province"
+//                 render={({ field }) => (
+//                   <FormItem>
+//                     <FormLabel>Province </FormLabel>
+//                     {/* <FormLabel>Province  <span className="text-red-500">*</span></FormLabel> */}
+//                     <FormControl>
+//                       <Input placeholder="e.g. Ontario" {...field} />
+//                     </FormControl>
+//                     <FormMessage />
+//                   </FormItem>
+//                 )}
+//               />
+//               <FormField
+//                 control={form.control}
+//                 name="country"
+//                 render={({ field }) => (
+//                   <FormItem>
+//                     <FormLabel>Country </FormLabel>
+//                     {/* <FormLabel>Country  <span className="text-red-500">*</span></FormLabel> */}
+//                     <FormControl>
+//                       <Input placeholder="e.g. Canada" {...field} />
+//                     </FormControl>
+//                     <FormMessage />
+//                   </FormItem>
+//                 )}
+//               />
+//             </div>
+
+//             {/* Password & Confirm Password in one row */}
+//             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//               <FormField
+//                 control={form.control}
+//                 name="password"
+//                 render={({ field }) => (
+//                   <FormItem>
+//                     <FormLabel>Password  <span className="text-red-500">*</span></FormLabel>
+//                     <FormControl>
+//                       <Input type="password" placeholder="••••••••" {...field} />
+//                     </FormControl>
+//                     <FormMessage />
+//                   </FormItem>
+//                 )}
+//               />
+//               <FormField
+//                 control={form.control}
+//                 name="confirmPassword"
+//                 render={({ field }) => (
+//                   <FormItem>
+//                     <FormLabel>Confirm Password  <span className="text-red-500">*</span></FormLabel>
+//                     <FormControl>
+//                       <Input type="password" placeholder="••••••••" {...field} />
+//                     </FormControl>
+//                     <FormMessage />
+//                   </FormItem>
+//                 )}
+//               />
+//             </div>
+
+//             <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6">
+//               Register
+//             </Button>
+//           </form>
+//         </Form>
+
+//         <p className="mt-8 text-center text-sm text-muted-foreground">
+//           Already have an account?{" "}
+//           <Button variant="link" asChild className="text-accent p-0 h-auto font-semibold hover:text-accent/80">
+//             <Link href="/login">Log in here</Link>
+//           </Button>
+//         </p>
+//       </div>
+//     </div>
+//   );
+// }
+
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -183,6 +547,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { register as registerApi } from '@/service/auth';
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import {
   Form,
@@ -195,7 +560,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { MountainSnow } from "lucide-react";
+import { MountainSnow, Loader2 } from "lucide-react";
 
 import { registerToWordPress } from '../../../src/api/wordpress';
 
@@ -232,6 +597,7 @@ const formSchema = z.object({
 export default function RegisterForm() {
   const { toast } = useToast();
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -250,7 +616,9 @@ export default function RegisterForm() {
       role: "USER",
     },
   });
+  
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsLoading(true);
     try {
       const formData = new FormData();
 
@@ -295,6 +663,8 @@ export default function RegisterForm() {
         title: 'Registration Failed',
         description: error.response?.data?.message || 'An unexpected error occurred.',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -320,7 +690,7 @@ export default function RegisterForm() {
                     <FormLabel>First Name</FormLabel>
                     {/* <FormLabel>First Name  <span className="text-red-500">*</span></FormLabel> */}
                     <FormControl>
-                      <Input placeholder="John" {...field} />
+                      <Input placeholder="John" {...field} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -334,7 +704,7 @@ export default function RegisterForm() {
                     <FormLabel>Last Name </FormLabel>
                     {/* <FormLabel>Last Name  <span className="text-red-500">*</span></FormLabel> */}
                     <FormControl>
-                      <Input placeholder="Doe" {...field} />
+                      <Input placeholder="Doe" {...field} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -351,7 +721,7 @@ export default function RegisterForm() {
                     <Input
                       type="file"
                       accept="image/*"
-                      
+                      disabled={isLoading}
                       onChange={(e) => field.onChange(e.target.files?.[0])}
                     />
 
@@ -369,7 +739,7 @@ export default function RegisterForm() {
                   {/* <FormLabel>Username  </FormLabel> */}
                   <FormLabel>Username  <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="abc123" {...field} />
+                    <Input placeholder="abc123" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -384,7 +754,7 @@ export default function RegisterForm() {
                   {/* <FormLabel>Email </FormLabel> */}
                   <FormLabel>Email  <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="your@email.com" {...field} />
+                    <Input placeholder="your@email.com" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -403,22 +773,23 @@ export default function RegisterForm() {
                       value={field.value}
                       onValueChange={field.onChange}
                       className="flex gap-4"
+                      disabled={isLoading}
                     >
                       <FormItem>
                         <FormControl>
-                          <RadioGroupItem value="Male" id="sex-male" />
+                          <RadioGroupItem value="Male" id="sex-male" disabled={isLoading} />
                         </FormControl>
                         <FormLabel htmlFor="sex-male">Male</FormLabel>
                       </FormItem>
                       <FormItem>
                         <FormControl>
-                          <RadioGroupItem value="Female" id="sex-female" />
+                          <RadioGroupItem value="Female" id="sex-female" disabled={isLoading} />
                         </FormControl>
                         <FormLabel htmlFor="sex-female">Female</FormLabel>
                       </FormItem>
                       <FormItem>
                         <FormControl>
-                          <RadioGroupItem value="Other" id="sex-other" />
+                          <RadioGroupItem value="Other" id="sex-other" disabled={isLoading} />
                         </FormControl>
                         <FormLabel htmlFor="sex-other">Other</FormLabel>
                       </FormItem>
@@ -437,7 +808,7 @@ export default function RegisterForm() {
                   <FormLabel>Age  </FormLabel>
                   {/* <FormLabel>Age  <span className="text-red-500">*</span></FormLabel> */}
                   <FormControl>
-                    <Input type="number" min={1} {...field} />
+                    <Input type="number" min={1} {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -451,7 +822,7 @@ export default function RegisterForm() {
                 <FormItem>
                   <FormLabel>Education</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. Bachelor's in Computer Science" {...field} />
+                    <Input placeholder="e.g. Bachelor's in Computer Science" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -468,7 +839,7 @@ export default function RegisterForm() {
                     <FormLabel>Province </FormLabel>
                     {/* <FormLabel>Province  <span className="text-red-500">*</span></FormLabel> */}
                     <FormControl>
-                      <Input placeholder="e.g. Ontario" {...field} />
+                      <Input placeholder="e.g. Ontario" {...field} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -482,7 +853,7 @@ export default function RegisterForm() {
                     <FormLabel>Country </FormLabel>
                     {/* <FormLabel>Country  <span className="text-red-500">*</span></FormLabel> */}
                     <FormControl>
-                      <Input placeholder="e.g. Canada" {...field} />
+                      <Input placeholder="e.g. Canada" {...field} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -499,7 +870,7 @@ export default function RegisterForm() {
                   <FormItem>
                     <FormLabel>Password  <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input type="password" placeholder="••••••••" {...field} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -512,7 +883,7 @@ export default function RegisterForm() {
                   <FormItem>
                     <FormLabel>Confirm Password  <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input type="password" placeholder="••••••••" {...field} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -520,8 +891,19 @@ export default function RegisterForm() {
               />
             </div>
 
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6">
-              Register
+            <Button 
+              type="submit" 
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Registering...
+                </>
+              ) : (
+                "Register"
+              )}
             </Button>
           </form>
         </Form>
