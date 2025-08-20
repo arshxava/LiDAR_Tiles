@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { X, Trash2 } from "lucide-react";
+import { X, Trash2, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -13,7 +13,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"; // ✅ confirmation dialog
+} from "@/components/ui/alert-dialog";
 
 export default function UploadedMapsModal({ onClose, onSelectMap }) {
   const [maps, setMaps] = useState<any[]>([]);
@@ -58,6 +58,9 @@ export default function UploadedMapsModal({ onClose, onSelectMap }) {
         title: "Deleted",
         description: "Map and its tiles were successfully deleted.",
       });
+
+      // ✅ Close dialog AFTER success
+      setConfirmDeleteId(null);
     } catch (err) {
       console.error("Error deleting map:", err);
       toast({
@@ -67,7 +70,6 @@ export default function UploadedMapsModal({ onClose, onSelectMap }) {
       });
     } finally {
       setDeletingId(null);
-      setConfirmDeleteId(null);
     }
   };
 
@@ -95,7 +97,11 @@ export default function UploadedMapsModal({ onClose, onSelectMap }) {
                   }}
                   disabled={deletingId === map._id}
                 >
-                  <Trash2 className="w-5 h-5" />
+                  {deletingId === map._id ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-5 h-5" />
+                  )}
                 </button>
 
                 <CardHeader
@@ -136,13 +142,17 @@ export default function UploadedMapsModal({ onClose, onSelectMap }) {
       </div>
 
       {/* ✅ Confirmation Dialog */}
-      <AlertDialog open={!!confirmDeleteId} onOpenChange={() => setConfirmDeleteId(null)}>
+      <AlertDialog
+        open={!!confirmDeleteId}
+        onOpenChange={() => setConfirmDeleteId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Map?</AlertDialogTitle>
           </AlertDialogHeader>
           <p className="text-sm text-muted-foreground">
-            This will permanently delete the map and all its tiles. This action cannot be undone.
+            This will permanently delete the map and all its tiles. This action
+            cannot be undone.
           </p>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setConfirmDeleteId(null)}>
@@ -150,9 +160,16 @@ export default function UploadedMapsModal({ onClose, onSelectMap }) {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => confirmDeleteId && handleDelete(confirmDeleteId)}
-              className="bg-red-600 text-white hover:bg-red-700"
+              className="bg-red-600 text-white hover:bg-red-700 flex items-center justify-center gap-2"
             >
-              {deletingId === confirmDeleteId ? "Deleting..." : "Delete"}
+              {deletingId === confirmDeleteId ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
