@@ -259,3 +259,249 @@ const token = localStorage.getItem("lidarToken");
     </Card>
   );
 }
+
+
+
+
+
+
+
+
+
+// "use client";
+
+// import React, { useState } from "react";
+// import {
+//   Card,
+//   CardContent,
+//   CardDescription,
+//   CardHeader,
+//   CardTitle,
+// } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import { Input } from "@/components/ui/input";
+// import { Label } from "@/components/ui/label";
+// import { Textarea } from "@/components/ui/textarea";
+// import { useToast } from "@/hooks/use-toast";
+// import { UploadCloud, Loader2 } from "lucide-react";
+
+// export default function MapUploadForm() {
+//   const [mapLink, setMapLink] = useState("");
+//   const [mapName, setMapName] = useState("");
+//   const [mapDescription, setMapDescription] = useState("");
+//   const [minLat, setMinLat] = useState("");
+//   const [maxLat, setMaxLat] = useState("");
+//   const [minLng, setMinLng] = useState("");
+//   const [maxLng, setMaxLng] = useState("");
+//   const [isUploading, setIsUploading] = useState(false);
+//   const { toast } = useToast();
+//   const token = localStorage.getItem("lidarToken");
+//   const baseUrl = process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL;
+
+//   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+//     event.preventDefault();
+
+//     if (!mapLink.trim() || !mapName.trim()) {
+//       toast({
+//         variant: "destructive",
+//         title: "All fields required",
+//         description: "Please provide the map name and link.",
+//       });
+//       return;
+//     }
+
+//     if (!token) {
+//       toast({
+//         variant: "destructive",
+//         title: "Unauthorized",
+//         description: "Please login to upload maps.",
+//       });
+//       return;
+//     }
+
+//     const body = {
+//       name: mapName,
+//       description: mapDescription,
+//       minLat,
+//       maxLat,
+//       minLng,
+//       maxLng,
+//       tileSizeKm: 10,
+//       fileUrl: mapLink,
+//     };
+
+//     setIsUploading(true);
+//     try {
+//       const res = await fetch(`${baseUrl}/api/maps/upload`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify(body),
+//       });
+
+//       const data = await res.json();
+
+//       if (!res.ok) {
+//         throw new Error(data?.msg || "Upload failed");
+//       }
+
+//       toast({
+//         title: "Map linked successfully",
+//         description: `${data.name} has been processed.`,
+//       });
+
+//       // Reset form
+//       setMapLink("");
+//       setMapName("");
+//       setMapDescription("");
+//       setMinLat("");
+//       setMaxLat("");
+//       setMinLng("");
+//       setMaxLng("");
+//     } catch (err) {
+//       toast({
+//         variant: "destructive",
+//         title: "Upload Failed",
+//         description: (err as any)?.message || "Something went wrong",
+//       });
+//     }
+//     setIsUploading(false);
+//   };
+
+//   return (
+//     <Card className="shadow-lg">
+//       <CardHeader>
+//         <div className="flex items-center space-x-2">
+//           <UploadCloud className="h-6 w-6 text-primary" />
+//           <CardTitle className="font-headline">Link New LiDAR Map</CardTitle>
+//         </div>
+//         <CardDescription>
+//           Provide a link (GeoTIFF, ASC, LAS, or LAZ) and define its properties.
+//         </CardDescription>
+//       </CardHeader>
+//       <CardContent>
+//         <form onSubmit={handleSubmit} className="space-y-6">
+//           <div>
+//             <Label htmlFor="map-link">Map Link</Label>
+//             <Input
+//               id="map-link"
+//               type="url"
+//               value={mapLink}
+//               onChange={(e) => setMapLink(e.target.value)}
+//               placeholder="https://example.com/maps/dataset.tif"
+//               required
+//               className="mt-1"
+//             />
+//           </div>
+
+//           <div>
+//             <Label htmlFor="map-name">Map Name</Label>
+//             <Input
+//               id="map-name"
+//               value={mapName}
+//               onChange={(e) => setMapName(e.target.value)}
+//               placeholder="e.g., San Francisco Bay Area LiDAR"
+//               required
+//               className="mt-1"
+//             />
+//           </div>
+
+//           <div>
+//             <Label htmlFor="map-description">Map Description (Optional)</Label>
+//             <Textarea
+//               id="map-description"
+//               value={mapDescription}
+//               onChange={(e) => setMapDescription(e.target.value)}
+//               placeholder="Brief description of the map or dataset"
+//               className="mt-1"
+//             />
+//           </div>
+
+//           <fieldset className="space-y-4 rounded-md border p-4">
+//             <legend className="-ml-1 px-1 text-sm font-medium text-foreground">
+//               Geographic Bounds
+//             </legend>
+//             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//               <div>
+//                 <Label htmlFor="min-lat">Min Latitude</Label>
+//                 <Input
+//                   id="min-lat"
+//                   type="number"
+//                   step="any"
+//                   value={minLat}
+//                   onChange={(e) => setMinLat(e.target.value)}
+//                   placeholder="e.g., 37.0000"
+//                   required
+//                   className="mt-1"
+//                 />
+//               </div>
+//               <div>
+//                 <Label htmlFor="max-lat">Max Latitude</Label>
+//                 <Input
+//                   id="max-lat"
+//                   type="number"
+//                   step="any"
+//                   value={maxLat}
+//                   onChange={(e) => setMaxLat(e.target.value)}
+//                   placeholder="e.g., 38.0000"
+//                   required
+//                   className="mt-1"
+//                 />
+//               </div>
+//               <div>
+//                 <Label htmlFor="min-lng">Min Longitude</Label>
+//                 <Input
+//                   id="min-lng"
+//                   type="number"
+//                   step="any"
+//                   value={minLng}
+//                   onChange={(e) => setMinLng(e.target.value)}
+//                   placeholder="e.g., -123.0000"
+//                   required
+//                   className="mt-1"
+//                 />
+//               </div>
+//               <div>
+//                 <Label htmlFor="max-lng">Max Longitude</Label>
+//                 <Input
+//                   id="max-lng"
+//                   type="number"
+//                   step="any"
+//                   value={maxLng}
+//                   onChange={(e) => setMaxLng(e.target.value)}
+//                   placeholder="e.g., -122.0000"
+//                   required
+//                   className="mt-1"
+//                 />
+//               </div>
+//             </div>
+//             <p className="text-xs text-muted-foreground">
+//               Define the bounding box for the map. This will be used for tile
+//               generation.
+//             </p>
+//           </fieldset>
+
+//           <Button
+//             type="submit"
+//             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+//             disabled={isUploading}
+//           >
+//             {isUploading ? (
+//               <>
+//                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+//                 Uploading...
+//               </>
+//             ) : (
+//               <>
+//                 <UploadCloud className="mr-2 h-4 w-4" />
+//                 Link and Process Map
+//               </>
+//             )}
+//           </Button>
+//         </form>
+//       </CardContent>
+//     </Card>
+//   );
+// }
