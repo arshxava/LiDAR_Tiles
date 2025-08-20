@@ -667,9 +667,9 @@ useEffect(() => {
                 )}
                 Submit
               </Button>
-              <Button variant="outline" onClick={() => setShowShareDialog(true)}>
+              {/* <Button variant="outline" onClick={() => setShowShareDialog(true)}>
                 Share Tile
-              </Button>
+              </Button> */}
               <Button
                 onClick={skipTile}
                 variant="outline"
