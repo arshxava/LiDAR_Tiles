@@ -95,56 +95,74 @@ export default function DashboardPage() {
   //   localStorage.setItem("tutorialSeen", "true");
   //   setShowTutorial(false);
   // };
+useEffect(() => {
+  if (!loading && user) {
+    localStorage.setItem("lastUserId", user.id);
 
-  useEffect(() => {
-    if (!loading && user) {
-      const storedUserId = localStorage.getItem("lastUserId");
+    // 🔑 Always fetch from backend
+    fetchAssignedTile();
 
-      // 🔁 If a different user logs in, clear previous tile/annotations
-      if (storedUserId && storedUserId !== user.id) {
-        // console.log("🔄 Detected user switch, clearing localStorage data");
-        localStorage.removeItem("currentTile");
-        localStorage.removeItem("currentAnnotations");
-      }
-
-      // 📝 Save the current user ID
-      localStorage.setItem("lastUserId", user.id);
-
-      const savedTileRaw = localStorage.getItem("currentTile");
-      const savedAnnotations = localStorage.getItem("currentAnnotations");
-
-      let savedTile = null;
-      if (savedTileRaw) {
-        savedTile = JSON.parse(savedTileRaw);
-      }
-
-      const shouldFetchNewTile =
-        !savedTile ||
-        !savedTile.status ||
-        savedTile.status !== "in_progress" ||
-        savedTile.assignedTo !== user.id;
-
-      if (shouldFetchNewTile) {
-        // console.log("📡 No valid saved tile, calling fetchAssignedTile()");
-        fetchAssignedTile();
-      } else {
-        if (savedTile.imageUrl?.startsWith("/uploads")) {
-          savedTile.imageUrl = `${baseUrl}${savedTile.imageUrl}`;
-        }
-
-        setSelectedTile(savedTile);
-        setLoadingTile(false);
-      }
-
-      if (savedAnnotations) {
-        setAnnotations(JSON.parse(savedAnnotations));
-      }
-
-      fetchUserStats();
-    } else if (!loading && !user) {
-      router.push("/login");
+    // Restore annotations if they exist locally
+    const savedAnnotations = localStorage.getItem("currentAnnotations");
+    if (savedAnnotations) {
+      setAnnotations(JSON.parse(savedAnnotations));
     }
-  }, [user, loading]);
+
+    fetchUserStats();
+  } else if (!loading && !user) {
+    router.push("/login");
+  }
+}, [user, loading]);
+
+  // useEffect(() => {
+  //   if (!loading && user) {
+  //     const storedUserId = localStorage.getItem("lastUserId");
+
+  //     // 🔁 If a different user logs in, clear previous tile/annotations
+  //     if (storedUserId && storedUserId !== user.id) {
+  //       // console.log("🔄 Detected user switch, clearing localStorage data");
+  //       localStorage.removeItem("currentTile");
+  //       localStorage.removeItem("currentAnnotations");
+  //     }
+
+  //     // 📝 Save the current user ID
+  //     localStorage.setItem("lastUserId", user.id);
+
+  //     const savedTileRaw = localStorage.getItem("currentTile");
+  //     const savedAnnotations = localStorage.getItem("currentAnnotations");
+
+  //     let savedTile = null;
+  //     if (savedTileRaw) {
+  //       savedTile = JSON.parse(savedTileRaw);
+  //     }
+
+  //     const shouldFetchNewTile =
+  //       !savedTile ||
+  //       !savedTile.status ||
+  //       savedTile.status !== "in_progress" ||
+  //       savedTile.assignedTo !== user.id;
+
+  //     if (shouldFetchNewTile) {
+  //       // console.log("📡 No valid saved tile, calling fetchAssignedTile()");
+  //       fetchAssignedTile();
+  //     } else {
+  //       if (savedTile.imageUrl?.startsWith("/uploads")) {
+  //         savedTile.imageUrl = `${baseUrl}${savedTile.imageUrl}`;
+  //       }
+
+  //       setSelectedTile(savedTile);
+  //       setLoadingTile(false);
+  //     }
+
+  //     if (savedAnnotations) {
+  //       setAnnotations(JSON.parse(savedAnnotations));
+  //     }
+
+  //     fetchUserStats();
+  //   } else if (!loading && !user) {
+  //     router.push("/login");
+  //   }
+  // }, [user, loading]);
 
   useEffect(() => {
     if (selectedTile) {
@@ -505,40 +523,7 @@ export default function DashboardPage() {
                   onClick={handleImageClick}
                 />
 
-                {/* {[...annotations, ...filteredPastAnnotations].map((ann) =>
-                ann.type === "point" ? (
-                  <div
-                    key={ann.id}
-                    className="absolute w-4 h-4 bg-red-600 rounded-full border border-white"
-                    style={{
-                      ...(imageRef.current &&
-                        (() => {
-                          const rect = imageRef.current.getBoundingClientRect();
-                          const scale = Math.min(
-                            rect.width / imageRef.current.naturalWidth,
-                            rect.height / imageRef.current.naturalHeight
-                          );
-
-                          const offsetX =
-                            (rect.width -
-                              imageRef.current.naturalWidth * scale) /
-                            2;
-                          const offsetY =
-                            (rect.height -
-                              imageRef.current.naturalHeight * scale) /
-                            2;
-
-                          return {
-                            left: `${ann.data.pixelX * scale + offsetX}px`,
-                            top: `${ann.data.pixelY * scale + offsetY}px`,
-                            transform: "translate(-50%, -50%)",
-                          };
-                        })()),
-                    }}
-                    title={ann.label}
-                  />
-                ) : null
-              )} */}
+                
 
                 {[...annotations, ...filteredPastAnnotations].map((ann) =>
                   ann.type === "polygon" && Array.isArray(ann.data?.points) ? (
@@ -682,9 +667,9 @@ export default function DashboardPage() {
                 )}
                 Submit
               </Button>
-              {/* <Button variant="outline" onClick={() => setShowShareDialog(true)}>
+              <Button variant="outline" onClick={() => setShowShareDialog(true)}>
                 Share Tile
-              </Button> */}
+              </Button>
               <Button
                 onClick={skipTile}
                 variant="outline"
@@ -841,46 +826,46 @@ export default function DashboardPage() {
         </Dialog>
       </div>
       <Dialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle className="text-xl font-semibold">
-        Welcome!
-      </DialogTitle>
-      <p className="text-muted-foreground text-sm">
-        You already have access to this project.
-      </p>
-    </DialogHeader>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              Welcome!
+            </DialogTitle>
+            <p className="text-muted-foreground text-sm">
+              You already have access to this project.
+            </p>
+          </DialogHeader>
 
-    <div className="space-y-4 mt-2">
-      <p className="text-sm leading-relaxed">
-        If you'd like to work on a different project, you can head over to your project list anytime.
-      </p>
-      <div className="bg-muted rounded-md p-4">
-        <p className="font-medium text-base mb-1">🚀 Ready to Annotate?</p>
-        <p className="text-sm">
-          You're all set to continue where you left off. Let’s make great progress today!
-        </p>
-      </div>
-    </div>
+          <div className="space-y-4 mt-2">
+            <p className="text-sm leading-relaxed">
+              If you'd like to work on a different project, you can head over to your project list anytime.
+            </p>
+            <div className="bg-muted rounded-md p-4">
+              <p className="font-medium text-base mb-1">🚀 Ready to Annotate?</p>
+              <p className="text-sm">
+                You're all set to continue where you left off. Let’s make great progress today!
+              </p>
+            </div>
+          </div>
 
-    <DialogFooter className="pt-4">
-      <Button
-        variant="outline"
-        onClick={() => {
-          router.push("https://echoesfromthepast.be/#"); 
-        }}
-      >
-        📁 Go to Projects
-      </Button>
-      <Button onClick={() => setShowWelcomeDialog(false)}>
-        ✅ Continue Annotating
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+          <DialogFooter className="pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                router.push("https://echoesfromthepast.be/#");
+              }}
+            >
+              📁 Go to Projects
+            </Button>
+            <Button onClick={() => setShowWelcomeDialog(false)}>
+              ✅ Continue Annotating
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
 
-<Dialog open={showTutorial && !showWelcomeDialog} onOpenChange={setShowTutorial}>
+     <Dialog open={showTutorial && !showWelcomeDialog} onOpenChange={setShowTutorial}>
   <DialogContent>
     <DialogHeader>
       <DialogTitle>📌 How to Annotate Tiles</DialogTitle>
@@ -891,7 +876,7 @@ export default function DashboardPage() {
           🖊️ <strong>Select the marking tool</strong> from the toolbar to begin annotation.
         </li>
         <li>
-          📍 <strong>Mark the area:</strong> Click points on the tile to create a polygon 
+          📍 <strong>Mark the area:</strong> Click points on the tile to create a polygon
           around the structure you want to annotate.
         </li>
         <li>
@@ -911,7 +896,7 @@ export default function DashboardPage() {
           </ul>
         </li>
       </ol>
-
+ 
       <div className="mt-3 space-y-1">
         <p>✨ <strong>Additional Options:</strong></p>
         <ul className="list-disc pl-6">
@@ -926,7 +911,6 @@ export default function DashboardPage() {
     </DialogFooter>
   </DialogContent>
 </Dialog>
-
       <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
         <DialogContent>
           <DialogHeader>
