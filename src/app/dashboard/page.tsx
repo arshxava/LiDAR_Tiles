@@ -673,7 +673,7 @@ export default function DashboardPage() {
             )}
 
 
-            <div className="flex space-x-4 mt-4">
+            <div className="flex flex-wrap gap-2.5 mt-4">
               <Button onClick={completeTile} disabled={loadingTile}>
                 {loadingTile ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -682,9 +682,9 @@ export default function DashboardPage() {
                 )}
                 Submit
               </Button>
-              <Button variant="outline" onClick={() => setShowShareDialog(true)}>
+              {/* <Button variant="outline" onClick={() => setShowShareDialog(true)}>
                 Share Tile
-              </Button>
+              </Button> */}
               <Button
                 onClick={skipTile}
                 variant="outline"
@@ -880,24 +880,53 @@ export default function DashboardPage() {
 </Dialog>
 
 
-      <Dialog open={showTutorial && !showWelcomeDialog} onOpenChange={setShowTutorial}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>How to Annotate Tiles</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p>✅ Select a tool from the toolbar:</p>
-            <ul className="list-disc pl-6">
-              {/* <li><strong>Point</strong>: Click on the tile to add a point.</li> */}
-              <li><strong>Polygon</strong>: Click multiple points to draw an area.</li>
-            </ul>
-            <p>💡 You can undo or complete polygons using the buttons below the tile.</p>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setShowTutorial(false)}>Got it!</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+<Dialog open={showTutorial && !showWelcomeDialog} onOpenChange={setShowTutorial}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>📌 How to Annotate Tiles</DialogTitle>
+    </DialogHeader>
+    <div className="space-y-4 text-sm">
+      <ol className="list-decimal pl-6 space-y-2">
+        <li>
+          🖊️ <strong>Select the marking tool</strong> from the toolbar to begin annotation.
+        </li>
+        <li>
+          📍 <strong>Mark the area:</strong> Click points on the tile to create a polygon 
+          around the structure you want to annotate.
+        </li>
+        <li>
+          ✅ Once done, click <span className="font-semibold">Complete Echo</span>.  
+          A popup will appear asking for:
+          <ul className="list-disc pl-6 mt-1">
+            <li>🏷️ <strong>Label</strong> – Select the appropriate label for the echo</li>
+            <li>📅 <strong>Period</strong> – Choose the period the structure belongs to</li>
+            <li>📝 <strong>Notes</strong> – Add any extra details (optional)</li>
+          </ul>
+        </li>
+        <li>
+          💾 Click <span className="font-semibold">Save</span> to finish. You can then either:
+          <ul className="list-disc pl-6 mt-1">
+            <li>➕ Add more annotations on the same tile</li>
+            <li>📤 Or click <span className="font-semibold">Submit</span> if you’re done</li>
+          </ul>
+        </li>
+      </ol>
+
+      <div className="mt-3 space-y-1">
+        <p>✨ <strong>Additional Options:</strong></p>
+        <ul className="list-disc pl-6">
+          <li>↩️ Use <span className="font-semibold">Undo Last Point</span> if you make a mistake while marking.</li>
+          <li>⏭️ You can <span className="font-semibold">skip up to 3 tiles</span> if you’re unsure.</li>
+          <li>🚫 If no echoes are visible, select <span className="font-semibold">No Echo Found</span>.</li>
+        </ul>
+      </div>
+    </div>
+    <DialogFooter>
+      <Button onClick={() => setShowTutorial(false)}>Got it!</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
       <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
         <DialogContent>
           <DialogHeader>
