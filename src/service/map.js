@@ -17,3 +17,10 @@ export const getMaps = async (token) => {
   });
   return res.data;
 };
+
+export const deleteMap = async (mapId, token) => {
+  const res = await api.delete(`/maps/${mapId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+};
