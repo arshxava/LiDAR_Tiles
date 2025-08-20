@@ -106,6 +106,26 @@ const filteredTiles = statusFilter === "all"
 
       <Separator />
 
+
+
+{latestMap?.viewerUrl && (
+  <section>
+    <h3 className="text-xl font-semibold font-headline text-foreground mb-4">
+      Potree Viewer
+    </h3>
+    <div className="w-full aspect-video border rounded shadow overflow-hidden">
+      <iframe
+        src={latestMap.viewerUrl}
+        title="Potree Viewer"
+        width="100%"
+        height="100%"
+        className="w-full h-[600px] border-none"
+      />
+    </div>
+  </section>
+)}
+
+
       <section>
         <h3 className="text-xl font-semibold font-headline text-foreground mb-4">
           Map Tile View

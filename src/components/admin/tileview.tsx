@@ -12,17 +12,22 @@ type Tile = {
 interface Props {
   mapUrl: string;
   tiles: Tile[];
+  viewerUrl?: string; // ✅ Add this line
 }
- 
-export default function TileOverlayViewer({ mapUrl, tiles }: Props) {
+
+export default function TileOverlayViewer({ mapUrl, tiles, viewerUrl }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [selectedTile, setSelectedTile] = useState<Tile | null>(null);
   const [zoom, setZoom] = useState(1);
   const [origin, setOrigin] = useState("center");
-   const baseUrl= process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL ;
+  const baseUrl = process.env.NEXT_PUBLIC_LIDAR_APP_PROD_URL;
   const CANVAS_W = 1000;
   const CANVAS_H = 1000;
- 
+  const [show3DViewer, setShow3DViewer] = useState(false);
+
+  const potreeViewerPath = viewerUrl || `${baseUrl}/potree/viewer1/viewer.html`;
+
+
   if (!mapUrl || tiles.length === 0) return null;
  
   const minLat = Math.min(...tiles.map((t) => t.bounds[0]));
@@ -104,67 +109,76 @@ export default function TileOverlayViewer({ mapUrl, tiles }: Props) {
   return (
     <>
       {/* Main Grid Map */}
-      <div className="relative w-full max-w-[800px] mx-auto">
-        <img src={mapUrl} alt="Base Map" className="w-full" />
-        <div className="absolute inset-0 pointer-events-none">
-          {tiles.map((tile, idx) => {
-            const [minLatT, maxLatT, minLngT, maxLngT] = tile.bounds;
-            const top = ((minLatT - minLat) / (maxLat - minLat)) * 100;
-            const left = ((minLngT - minLng) / (maxLng - minLng)) * 100;
-            const h = ((maxLatT - minLatT) / (maxLat - minLat)) * 100;
-            const w = ((maxLngT - minLngT) / (maxLng - minLng)) * 100;
- 
-            const url =
-              tile.status === "completed" && tile.annotatedImageUrl
-                ? getFullUrl(tile.annotatedImageUrl)
-                : getFullUrl(tile.imageUrl);
- 
-            return (
-              <div
-                key={idx}
-                onClick={() => handleTileClick(tile)}
-                className="pointer-events-auto cursor-pointer"
+   <div className="relative w-full max-w-[1000px] mx-auto mt-6">
+  {show3DViewer ? (
+    <iframe
+      src={potreeViewerPath}
+      className="w-full h-[85vh] rounded-xl border border-gray-400 shadow-lg"
+    />
+  ) : (
+    <>
+      <img src={mapUrl} alt="Base Map" className="w-full" />
+      <div className="absolute inset-0 pointer-events-none">
+        {tiles.map((tile, idx) => {
+          const [minLatT, maxLatT, minLngT, maxLngT] = tile.bounds;
+          const top = ((minLatT - minLat) / (maxLat - minLat)) * 100;
+          const left = ((minLngT - minLng) / (maxLng - minLng)) * 100;
+          const h = ((maxLatT - minLatT) / (maxLat - minLat)) * 100;
+          const w = ((maxLngT - minLngT) / (maxLng - minLng)) * 100;
+
+          const url =
+            tile.status === "completed" && tile.annotatedImageUrl
+              ? getFullUrl(tile.annotatedImageUrl)
+              : getFullUrl(tile.imageUrl);
+
+          return (
+            <div
+              key={idx}
+              onClick={() => handleTileClick(tile)}
+              className="pointer-events-auto cursor-pointer"
+              style={{
+                position: "absolute",
+                top: `${top}%`,
+                left: `${left}%`,
+                height: `${h}%`,
+                width: `${w}%`,
+                border: "2px solid red",
+                overflow: "hidden",
+              }}
+            >
+              <img
+                src={url}
+                alt={`Tile ${idx + 1}`}
                 style={{
-                  position: "absolute",
-                  top: `${top}%`,
-                  left: `${left}%`,
-                  height: `${h}%`,
-                  width: `${w}%`,
-                  border: "2px solid red",
-                  overflow: "hidden",
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
                 }}
-              >
-                <img
-                  src={url}
-                  alt={`Tile ${idx + 1}`}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
-              </div>
-            );
-          })}
-        </div>
- 
-        {/* Hidden canvas for download */}
-        <canvas
-          ref={canvasRef}
-          width={CANVAS_W}
-          height={CANVAS_H}
-          style={{ display: "none" }}
-        />
+              />
+            </div>
+          );
+        })}
       </div>
- 
-      <div className="text-center mt-4">
-        <button
-          onClick={drawMap}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
-        >
-          Download Annotated Map
-        </button>
-      </div>
+    </>
+  )}
+</div>
+
+ <div className="text-center mt-4">
+  <button
+    onClick={() => setShow3DViewer(!show3DViewer)}
+    className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded mr-4"
+  >
+    {show3DViewer ? "Back to 2D Map" : "View in 3D"}
+  </button>
+
+  <button
+    onClick={drawMap}
+    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
+  >
+    Download Annotated Map
+  </button>
+</div>
+
  
       {/* ─────────────── Modal (Taller + Wider) ─────────────── */}
       {selectedTile && (
