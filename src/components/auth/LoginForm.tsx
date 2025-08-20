@@ -147,7 +147,7 @@ import { login as loginApi } from '@/service/auth';
  
 //  Login schema without role
 const formSchema = z.object({
-  email: z.string().email({ message: "Invalid email address." }),
+  identifier: z.string().min(3, { message: "Enter email or username." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
  
@@ -165,35 +165,35 @@ export default function LoginForm() {
   });
  
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-   
-    try {
-      const res = await loginApi({
-        email: values.email,
-        password: values.password,
-      });
-// console.log("Logged in user:", res.user.username); // ✅ Should log "rohanxava"
- 
-      setUser(res.user);
-      setToken(res.token);
-      toast({
-        title: 'Login Successful',
-        description: 'Welcome back to LiDAR Explorer!',
-      });
- 
-      if (res.user.role === "SUPER_ADMIN") {
-        router.push('/admin');
-      } else {
-        router.push('/dashboard');
-      }
-    } catch (error: any) {
- 
-      toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: error.response?.data?.msg || 'An unexpected error occurred.',
-      });
+  try {
+    const res = await loginApi({
+      email: values.identifier,    
+       // 🔹 backend will check both
+      password: values.password,
+    });
+    
+    setUser(res.user);
+    setToken(res.token);
+
+    toast({
+      title: 'Login Successful',
+      description: `Welcome back, ${res.user.username}!`,
+    });
+
+    if (res.user.role === "SUPER_ADMIN") {
+      router.push('/admin');
+    } else {
+      router.push('/dashboard');
     }
-  };
+  } catch (error: any) {
+    toast({
+      variant: 'destructive',
+      title: 'Login Failed',
+      description: error.response?.data?.msg || 'An unexpected error occurred.',
+    });
+  }
+};
+
  
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-background to-secondary/30 p-4">
@@ -206,18 +206,19 @@ export default function LoginForm() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="your@email.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+  control={form.control}
+  name="identifier"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Email or Username</FormLabel>
+      <FormControl>
+        <Input placeholder="Enter email or username" {...field} />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
             <FormField
               control={form.control}
               name="password"
