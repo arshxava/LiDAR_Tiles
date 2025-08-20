@@ -3,8 +3,8 @@ import axios from 'axios';
 export const registerToWordPress = async (formData) => {
   try {
     const res = await axios.post(
-      // 'https://echoesfromthepast.be/wp-json/custom/v1/register',
-         'https://xavatestserver.com/ben/wp-json/custom/v1/register',
+      'https://echoesfromthepast.be/wp-json/custom/v1/register',
+        //  'https://xavatestserver.com/ben/wp-json/custom/v1/register',
       {
       username: formData.username,
       email: formData.email,
